@@ -1,0 +1,2 @@
+# About
+An implementation of a compiler for Thornsten Ball's language Monkey used in his book "Compiler in Go". This compiler is implemented based on first principles in C and there are no dependencies except for the UNIX C standard library.
