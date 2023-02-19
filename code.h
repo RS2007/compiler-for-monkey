@@ -1,13 +1,16 @@
-#include<stdint.h>
+#include <stdint.h>
+#include "hashmap.h"
 
-typedef int8_t byte;
 
-
-typedef struct Definition {
-    char* Name;
-    int* OperandWidths;
+typedef struct Definition
+{
+    char *Name;
+    int *OperandWidths;
 } Definition;
 
-typedef byte* Instructions;
-typedef byte Opcode;
+typedef byte *Instructions;
 
+
+
+void setup_definitions(hashmap* hm);
+opcode_defn * lookup_opcode(hashmap* hm,byte key);
