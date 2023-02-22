@@ -1,39 +1,21 @@
 #include <stdbool.h>
+#include <string.h>
+#include "lexer.h"
 
-int number_of_digits(int number)
-{
-    int count = 1;
-    while (number / 10 != 0)
-    {
-        count++;
-    }
-    return count;
+char array[14][STRING_MAX_SIZE] = {
+        "+", "Illegal", "Eof", "Ident", "Int", "Assign", "Comma",
+        "Semicolon", "Lparen", "Rparen", "LBrace", "Rbrace", "Function", "Let"};
+
+bool isLetter(char input) {
+    return (input >= 'a' && input <= 'z') || (input >= 'A' && input <= 'Z');
 }
 
-bool check_odd(int number)
-{
-    if (number % 2 == 0)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
-}
-
-int exponent_int(int a, int n)
-{
-    int ans = 1;
-    while (n > 0)
-    {
-        int last_bit = (n & 1);
-        if (last_bit)
-        {
-            ans = ans * a;
+int linear_search(int length, char *target) {
+    // linear search by comparing target and strings in array
+    for (int i = 0; i < length; i++) {
+        if (strcmp(array[i], target) == 0) {
+            return i;
         }
-        a = a * a;
-        n = n >> 1;
     }
-    return ans;
+    return -1;
 }
