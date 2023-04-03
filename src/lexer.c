@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "string.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,8 +35,56 @@ void trim_whitespace_lexer(lexer_t* lexer)
     }
 }
 
-//token_t* next_token_lexer(lexer_t* lexer)
-//{
-// initialize a token here from a new function namespaced in token.h
-//trim_whitespace_lexer(lexer);
-//
+token_t* next_token_lexer(lexer_t* lexer)
+{
+    token_t* token = new_token();
+    trim_whitespace_lexer(lexer);
+
+    // switch to match character to token literals
+    switch (lexer->ch) {
+    case '=':
+        token->literal = strdup("=");
+        token->type = ASSIGN;
+        read_char_lexer(lexer);
+        break;
+    case ';':
+        token->literal = strdup(";");
+        token->type = SEMICOLON;
+        read_char_lexer(lexer);
+        break;
+    case '(':
+        token->literal = strdup("(");
+        token->type = LPAREN;
+        read_char_lexer(lexer);
+        break;
+    case ')':
+        token->literal = strdup(")");
+        token->type = RPAREN;
+        read_char_lexer(lexer);
+        break;
+    case ',':
+        token->literal = strdup(",");
+        token->type = COMMA;
+        read_char_lexer(lexer);
+        break;
+    case '+':
+        token->literal = strdup("+");
+        token->type = PLUS;
+        read_char_lexer(lexer);
+        break;
+    case '{':
+        token->literal = strdup("{");
+        token->type = LBRACE;
+        read_char_lexer(lexer);
+        break;
+    case '}':
+        token->literal = strdup("}");
+        token->type = RBRACE;
+        read_char_lexer(lexer);
+        break;
+    case 0:
+        token->literal = "";
+        token->type = END_OF_FILE;
+    }
+    return token;
+}

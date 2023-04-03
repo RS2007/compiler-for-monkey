@@ -15,6 +15,7 @@ all: compile
 	./bin/mc
 
 compile: $(SOURCES_HEADERS)
+	echo $(SOURCES_HEADERS)
 	$(CC) -o ./bin/mc $(SOURCES) $(C_FLAGS)
 
 test : $(SOURCES_HEADERS) $(TESTS)
