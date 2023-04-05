@@ -9,7 +9,17 @@ int main(void)
                   "let add = fn(x, y){"
                   "x + y;"
                   "}"
-                  "let result = add(five, ten);";
+                  "let result = add(five, ten);"
+                  "!-/*5;"
+                  "5 < 10 > 5;"
+                  "  "
+                  "if(5 < 10){"
+                  " return true;"
+                  "}"
+                  ""
+                  "if(10 > 5){"
+                  " return false;"
+                  "}";
     const char* results[]
         = {
               "LET",
@@ -47,6 +57,40 @@ int main(void)
               "IDENT",
               "RPAREN",
               "SEMICOLON",
+              "BANG",
+              "MINUS",
+              "SLASH",
+              "ASTERIK",
+              "INT",
+              "SEMICOLON",
+              "INT",
+              "LT",
+              "INT",
+              "GT",
+              "INT",
+              "SEMICOLON",
+              "IF",
+              "LPAREN",
+              "INT",
+              "LT",
+              "INT",
+              "RPAREN",
+              "LBRACE",
+              "RETURN",
+              "TRUE",
+              "SEMICOLON",
+              "RBRACE",
+              "IF",
+              "LPAREN",
+              "INT",
+              "GT",
+              "INT",
+              "RPAREN",
+              "LBRACE",
+              "RETURN",
+              "FALSE",
+              "SEMICOLON",
+              "RBRACE",
               "END_OF_FILE"
           };
 

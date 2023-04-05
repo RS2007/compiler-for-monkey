@@ -99,6 +99,36 @@ token_t* next_token_lexer(lexer_t* lexer)
         token->type = RBRACE;
         read_char_lexer(lexer);
         break;
+    case '!':
+        token->literal = strdup("!");
+        token->type = BANG;
+        read_char_lexer(lexer);
+        break;
+    case '-':
+        token->literal = strdup("-");
+        token->type = MINUS;
+        read_char_lexer(lexer);
+        break;
+    case '/':
+        token->literal = strdup("/");
+        token->type = SLASH;
+        read_char_lexer(lexer);
+        break;
+    case '*':
+        token->literal = strdup("*");
+        token->type = ASTERIK;
+        read_char_lexer(lexer);
+        break;
+    case '<':
+        token->literal = strdup("<");
+        token->type = LT;
+        read_char_lexer(lexer);
+        break;
+    case '>':
+        token->literal = strdup(">");
+        token->type = GT;
+        read_char_lexer(lexer);
+        break;
     case '\0':
         token->literal = "";
         token->type = END_OF_FILE;

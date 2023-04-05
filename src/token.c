@@ -21,6 +21,16 @@ token_type lookup_ident_token(char* literal)
         return LET;
     if (strcmp(literal, "fn") == 0)
         return FUNCTION;
+    if (strcmp(literal, "true") == 0)
+        return TRUE;
+    if (strcmp(literal, "false") == 0)
+        return FALSE;
+    if (strcmp(literal, "if") == 0)
+        return IF;
+    if (strcmp(literal, "else") == 0)
+        return ELSE;
+    if (strcmp(literal, "return") == 0)
+        return RETURN;
     if (is_number(literal))
         return INT;
     return IDENT;

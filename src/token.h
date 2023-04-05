@@ -12,6 +12,12 @@ typedef enum token_type {
     // Operators
     ASSIGN,
     PLUS,
+    BANG,
+    MINUS,
+    SLASH,
+    ASTERIK,
+    LT,
+    GT,
 
     // Delimiters
     COMMA,
@@ -24,7 +30,12 @@ typedef enum token_type {
 
     // Keywords
     FUNCTION,
-    LET
+    LET,
+    TRUE,
+    FALSE,
+    IF,
+    ELSE,
+    RETURN
 } token_type;
 
 static const char* token_strings[] = {
@@ -34,6 +45,12 @@ static const char* token_strings[] = {
     "INT",
     "ASSIGN",
     "PLUS",
+    "BANG",
+    "MINUS",
+    "SLASH",
+    "ASTERIK",
+    "LT",
+    "GT",
     "COMMA",
     "SEMICOLON",
     "LPAREN",
@@ -42,6 +59,11 @@ static const char* token_strings[] = {
     "RBRACE",
     "FUNCTION",
     "LET",
+    "TRUE",
+    "FALSE",
+    "IF",
+    "ELSE",
+    "RETURN"
 };
 
 //#define token_string_from_type(tok_type) token_strings[tok_type]
