@@ -1,5 +1,7 @@
 #include "lexer.h"
 #include "string.h"
+#include "utils.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,9 +32,24 @@ void read_char_lexer(lexer_t* lexer)
 
 void trim_whitespace_lexer(lexer_t* lexer)
 {
-    while (lexer->ch && lexer->ch != '\t' && lexer->ch != '\n' && lexer->ch != ' ' && lexer->ch == '\r') {
+    while (lexer->ch && (lexer->ch == '\t' || lexer->ch == '\n' || lexer->ch == ' ' || lexer->ch == '\r')) {
         read_char_lexer(lexer);
     }
+}
+
+char* read_identifier_lexer(lexer_t* lexer)
+{
+    int curr_position = lexer->curr_position;
+    while (is_character(lexer->input[lexer->curr_position])) {
+        lexer->curr_position++;
+    }
+    size_t word_size = lexer->curr_position - curr_position;
+    char* identifier = (char*)malloc(word_size + 1);
+    memcpy(identifier, lexer->input + curr_position, word_size);
+    identifier[word_size] = '\0';
+    lexer->read_position = lexer->curr_position + 1;
+    lexer->ch = lexer->input[lexer->curr_position];
+    return identifier;
 }
 
 token_t* next_token_lexer(lexer_t* lexer)
@@ -82,9 +99,18 @@ token_t* next_token_lexer(lexer_t* lexer)
         token->type = RBRACE;
         read_char_lexer(lexer);
         break;
-    case 0:
+    case '\0':
         token->literal = "";
         token->type = END_OF_FILE;
+        break;
+    default:
+        if (is_character(lexer->ch)) {
+            token->literal = read_identifier_lexer(lexer);
+            token->type = lookup_ident_token(token->literal);
+            return token;
+        }
+        token->type = ILLEGAL;
+        token->literal = strdup(&lexer->ch);
     }
     return token;
 }

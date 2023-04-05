@@ -1,5 +1,5 @@
 CC = gcc
-C_FLAGS = -Wall
+C_FLAGS = -Wall -g
 SRC_FOLDER = ./src
 TEST_FOLDER = ./tests
 BIN_FOLDER = ./bin
@@ -19,7 +19,7 @@ compile: $(SOURCES_HEADERS)
 	$(CC) -o ./bin/mc $(SOURCES) $(C_FLAGS)
 
 test : $(SOURCES_HEADERS) $(TESTS)
-	$(CC) -o ./bin/${name}_test ${TEST_FOLDER}/${name}_test.c ${SOURCES_WITHOUT_MAIN} && ./bin/${name}_test
+	$(CC) -o ./bin/${name}_test ${TEST_FOLDER}/${name}_test.c ${SOURCES_WITHOUT_MAIN}  ${C_FLAGS} && ./bin/${name}_test
 
 clean: $(BIN)
 	rm -rf $(BIN)

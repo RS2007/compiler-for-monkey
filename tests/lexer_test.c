@@ -1,21 +1,56 @@
 #include "../src/lexer.h"
 #include <stdio.h>
+#include <string.h>
 
 int main(void)
 {
-    const char* input = "=+(){},;";
-    const char* results[] = {
-        "ASSIGN",
-        "PLUS",
-        "LPAREN",
-        "RPAREN",
-        "LBRACE",
-        "RBRACE",
-        "COMMA",
-        "SEMICOLON"
-    };
-    int input_size
-        = sizeof(input) / sizeof(input[0]);
+    char* input = "let five = 5;"
+                  "let ten = 10;"
+                  "let add = fn(x, y){"
+                  "x + y;"
+                  "}"
+                  "let result = add(five, ten);";
+    const char* results[]
+        = {
+              "LET",
+              "IDENT",
+              "ASSIGN",
+              "INT",
+              "SEMICOLON",
+              "LET",
+              "IDENT",
+              "ASSIGN",
+              "INT",
+              "SEMICOLON",
+              "LET",
+              "IDENT",
+              "ASSIGN",
+              "FUNCTION",
+              "LPAREN",
+              "IDENT",
+              "COMMA",
+              "IDENT",
+              "RPAREN",
+              "LBRACE",
+              "IDENT",
+              "PLUS",
+              "IDENT",
+              "SEMICOLON",
+              "RBRACE",
+              "LET",
+              "IDENT",
+              "ASSIGN",
+              "IDENT",
+              "LPAREN",
+              "IDENT",
+              "COMMA",
+              "IDENT",
+              "RPAREN",
+              "SEMICOLON",
+              "END_OF_FILE"
+          };
+
+    int input_size = strlen(input);
     lexer_t* lexer = new_lexer(input, input_size);
     int i = 0;
     int fail = 0;
@@ -25,13 +60,14 @@ int main(void)
             break;
         }
         if (token_strings[current_token->type] != results[i]) {
-            fprintf(stderr, "Test failed, expected: %s, got: %s", results[i], token_strings[current_token->type]);
+            fprintf(stderr, "Test failed, expected: %s, got: %s\n", results[i], token_strings[current_token->type]);
             fail = 1;
+            break;
         }
         ++i;
     }
     if (!fail) {
-        fprintf(stdout, "Test Passed");
+        fprintf(stdout, "All Tests Passed");
     }
     return 0;
 }

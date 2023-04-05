@@ -53,5 +53,6 @@ typedef struct token_t {
 } token_t;
 
 token_t* new_token();
+token_type lookup_ident_token(char*);
 
 #endif
