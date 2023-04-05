@@ -18,6 +18,9 @@ compile: $(SOURCES_HEADERS)
 	echo $(SOURCES_HEADERS)
 	$(CC) -o ./bin/mc $(SOURCES) $(C_FLAGS)
 
+repl: $(SOURCES_HEADERS)
+	$(CC) -o ./bin/repl $(SOURCES_WITHOUT_MAIN) $(C_FLAGS) && ./bin/repl
+
 test : $(SOURCES_HEADERS) $(TESTS)
 	$(CC) -o ./bin/${name}_test ${TEST_FOLDER}/${name}_test.c ${SOURCES_WITHOUT_MAIN}  ${C_FLAGS} && ./bin/${name}_test
 
