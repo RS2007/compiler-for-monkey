@@ -35,7 +35,11 @@ typedef enum token_type {
     FALSE,
     IF,
     ELSE,
-    RETURN
+    RETURN,
+
+    // Equality
+    EQ,
+    NOT_EQ
 } token_type;
 
 static const char* token_strings[] = {
@@ -63,7 +67,9 @@ static const char* token_strings[] = {
     "FALSE",
     "IF",
     "ELSE",
-    "RETURN"
+    "RETURN",
+    "EQ",
+    "NOT_EQ"
 };
 
 //#define token_string_from_type(tok_type) token_strings[tok_type]

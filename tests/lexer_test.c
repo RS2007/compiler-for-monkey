@@ -19,7 +19,11 @@ int main(void)
                   ""
                   "if(10 > 5){"
                   " return false;"
-                  "}";
+                  "}"
+                  ""
+                  ""
+                  "10 != 9;"
+                  "10 == 5 + 5";
     const char* results[]
         = {
               "LET",
@@ -91,6 +95,15 @@ int main(void)
               "FALSE",
               "SEMICOLON",
               "RBRACE",
+              "INT",
+              "NOT_EQ",
+              "INT",
+              "SEMICOLON",
+              "INT",
+              "EQ",
+              "INT",
+              "PLUS",
+              "INT",
               "END_OF_FILE"
           };
 

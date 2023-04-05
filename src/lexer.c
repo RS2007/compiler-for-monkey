@@ -52,6 +52,16 @@ char* read_identifier_lexer(lexer_t* lexer)
     return identifier;
 }
 
+char peek_char_lexer(lexer_t* lexer)
+{
+    if (strlen(lexer->input) <= lexer->read_position) {
+        fprintf(stderr, "Cannot peek beyond input");
+        abort();
+    }
+    char peek_char = lexer->input[lexer->read_position];
+    return peek_char;
+}
+
 token_t* next_token_lexer(lexer_t* lexer)
 {
     token_t* token = new_token();
@@ -60,6 +70,14 @@ token_t* next_token_lexer(lexer_t* lexer)
     // switch to match character to token literals
     switch (lexer->ch) {
     case '=':
+        if (peek_char_lexer(lexer) == '=') {
+            token->literal = strdup("==");
+            token->type = EQ;
+            // TODO: refactor with jump_char_lexer(instead of calling read_char_lexer twice)
+            read_char_lexer(lexer);
+            read_char_lexer(lexer);
+            break;
+        }
         token->literal = strdup("=");
         token->type = ASSIGN;
         read_char_lexer(lexer);
@@ -100,6 +118,14 @@ token_t* next_token_lexer(lexer_t* lexer)
         read_char_lexer(lexer);
         break;
     case '!':
+        if (peek_char_lexer(lexer) == '=') {
+            token->literal = strdup("!=");
+            token->type = NOT_EQ;
+            // TODO: refactor with jump_char_lexer(instead of calling read_char_lexer twice)
+            read_char_lexer(lexer);
+            read_char_lexer(lexer);
+            break;
+        }
         token->literal = strdup("!");
         token->type = BANG;
         read_char_lexer(lexer);

@@ -18,5 +18,6 @@ void read_char_lexer(lexer_t*);
 void trim_whitespace_lexer(lexer_t*);
 token_t* next_token_lexer(lexer_t*);
 char* read_identifier_lexer(lexer_t*);
+char peek_char_lexer(lexer_t*);
 
 #endif
