@@ -1,4 +1,5 @@
 CC = gcc
+DEBUGGER = gdb
 C_FLAGS = -Wall -g
 SRC_FOLDER = ./src
 TEST_FOLDER = ./tests
@@ -7,7 +8,7 @@ SOURCES = $(wildcard $(SRC_FOLDER)/*.c)
 HEADERS = $(wildcard $(SRC_FOLDER)/*.h)
 TESTS = $(wildcard $(TEST_FOLDER)/*.c)
 SOURCES_WITHOUT_REPL = $(shell find ./src -type f -name '*.c' ! -name 'repl.c')
-SOURCES_WITHOUT_MAIN = $(shell find ./src -type f -name '*.c' ! -name 'main.c')
+SOURCES_WITHOUT_MAIN = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'parser.c')
 SOURCES_WITHOUT_MAIN_REPL = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'repl.c')
 BIN = $(wildcard $(BIN_FOLDER)/*)
 
@@ -26,6 +27,11 @@ repl: $(SOURCES_HEADERS)
 test : $(SOURCES_HEADERS) $(TESTS)
 	$(CC) -o ./bin/${name}_test ${TEST_FOLDER}/${name}_test.c ${SOURCES_WITHOUT_MAIN_REPL}  ${C_FLAGS} && ./bin/${name}_test
 
+pretty: $(SOURCES) $(HEADERS)
+	./format.sh
+
+test-debug: $(SOURCES_HEADERS) $(TESTS)
+	$(CC) -o ./bin/${name}_test ${TEST_FOLDER}/${name}_test.c ${SOURCES_WITHOUT_MAIN_REPL}  ${C_FLAGS} && gdb ./bin/${name}_test
+
 clean: $(BIN)
 	rm -rf $(BIN)
-
