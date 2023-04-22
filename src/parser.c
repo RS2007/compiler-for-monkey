@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "nodes.h"
 #include "token.h"
 #include <assert.h>
 #include <stdbool.h>
@@ -56,6 +57,12 @@ char *let_token_literal(void *let_statement_cast_to_void) {
   let_statement_t *let_statement =
       (let_statement_t *)let_statement_cast_to_void;
   return token_strings[let_statement->token];
+}
+
+char* ret_token_literal(void* ret_statement_cast_to_void){
+  // TODO: is it possible to make a abstracted token literal function
+  ret_statement_t* ret_statement = (ret_statement_t *)ret_statement_cast_to_void;
+  return token_strings[ret_statement->token];
 }
 
 void statement_node_let(void *let_statement_cast_to_void) {
@@ -136,15 +143,23 @@ statement_t *parse_let_statement(parser_t *parser) {
   return (statement_t *)stmt;
 }
 
-
-statement_t* parse_return_statement(parser_t* parser){
-  
+statement_t *parse_return_statement(parser_t *parser) {
+  ret_statement_t* stmt = (ret_statement_t*)malloc(sizeof(ret_statement_t));
+  stmt->token = parser->curr_token->type;
+  stmt->token_literal = ret_token_literal;
+  next_token_parser(parser);
+  while(!is_curr_token(parser,SEMICOLON)){
+    next_token_parser(parser);
+  }
+  return (statement_t*)stmt;
 }
 
 statement_t *parse_statement(parser_t *parser) {
   switch (parser->curr_token->type) {
   case LET:
     return parse_let_statement(parser);
+  case RETURN:
+    return parse_return_statement(parser);
   default:
     return NULL;
   }
@@ -163,4 +178,3 @@ program_t *parse_program(parser_t *parser) {
   }
   return program_node;
 }
-

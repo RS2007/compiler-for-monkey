@@ -21,7 +21,7 @@ bool test_let_statement(statement_t *ast_statement, char *name) {
   return true;
 }
 
-int main(void) {
+int test_let_statements(void){
   char *input = "let x = 5;"
                 "let y  = 10;"
                 "let foobar = 838383;";
@@ -51,4 +51,39 @@ int main(void) {
     }
   }
   fprintf(stdout, "All tests passed");
+  return 0;
+}
+
+
+
+
+int main(void) {
+  char* input = "return 5;"
+    "return 10;"
+    "return 993322;";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  if (parser->errors_size != 0) {
+    int i;
+    for (i = 0; i < parser->errors_size; ++i) {
+      fprintf(stderr, "%s\n", parser->errors[i]);
+    }
+    exit(-1);
+  }
+  if (program_node->statements_size != STATEMENTS_NUMBER) {
+    fprintf(stderr, "Error: expected %d statements, got %d statements",
+            STATEMENTS_NUMBER, program_node->statements_size);
+    return 69;
+  }
+  int i;
+  for(i = 0;i<STATEMENTS_NUMBER;++i){
+    statement_t* stmt = program_node->statements[i];
+    if(strcmp(stmt->token_literal((void*)stmt),"RETURN") != 0){
+      fprintf(stderr,"Token literal not RETURN");
+      return 69;
+    }
+  }
+  fprintf(stdout, "All tests passed");
+  return 0;
 }

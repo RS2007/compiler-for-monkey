@@ -32,6 +32,13 @@ typedef struct identifier_t {
   char *value;
 } identifier_t;
 
+typedef struct expression_t {
+  node_type type;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+} expression_t;
+
 typedef struct statement_t {
   node_type type;
   Token_literal token_literal;
@@ -40,14 +47,8 @@ typedef struct statement_t {
   Statement_node statement_node;
   token_type token;
   char *iden_name;
+  expression_t *expression;
 } statement_t;
-
-typedef struct expression_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-} expression_t;
 
 typedef struct program_t {
   node_type type;
@@ -78,4 +79,5 @@ typedef struct ret_statement_t {
   Statement_node statement_node;
   token_type token;
   char *iden_name;
+  expression_t *expression;
 } ret_statement_t;
