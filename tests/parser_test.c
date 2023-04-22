@@ -1,12 +1,13 @@
 #include "../src/parser.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define STATEMENTS_NUMBER 3
 
-bool test_let_statement(statement_t *ast_statement, char *name) { char *token_literal = ast_statement->token_literal((void *)ast_statement);
+bool test_let_statement(statement_t *ast_statement, char *name) {
+  char *token_literal = ast_statement->token_literal((void *)ast_statement);
   if (strcmp(token_literal, "LET") != 0) {
     fprintf(stderr, "Expected: let statement, Got: %s", token_literal);
     return false;
@@ -27,10 +28,10 @@ int main(void) {
   lexer_t *lexer = new_lexer(input, strlen(input));
   parser_t *parser = new_parser(lexer);
   program_t *program_node = parse_program(parser);
-  if(parser->errors_size != 0){
+  if (parser->errors_size != 0) {
     int i;
-    for(i = 0;i<parser->errors_size;++i){
-      fprintf(stderr,"%s\n",parser->errors[i]);
+    for (i = 0; i < parser->errors_size; ++i) {
+      fprintf(stderr, "%s\n", parser->errors[i]);
     }
     exit(-1);
   }

@@ -74,8 +74,8 @@ typedef struct ret_statement_t {
   node_type type;
   Token_literal token_literal;
   Value value;
-  char* iden_value;
+  char *iden_value;
   Statement_node statement_node;
   token_type token;
-  char* iden_name;
+  char *iden_name;
 } ret_statement_t;

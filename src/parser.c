@@ -111,10 +111,11 @@ statement_t *parse_let_statement(parser_t *parser) {
   if (!expect_peek_token(parser, IDENT)) {
     char *error_string = (char *)malloc(MAX_ERROR_SIZE);
     snprintf(error_string, MAX_ERROR_SIZE, "Let is not followed by literal");
-    fprintf(stderr,"Let is not followed by literal");
+    fprintf(stderr, "Let is not followed by literal");
     push_errors_parser(parser, error_string);
     exit(-1);
-    // FIXME: find a way to bubble errors and then print them in the root program
+    // FIXME: find a way to bubble errors and then print them in the root
+    // program
   }
   // 2. identifier info
   stmt->iden_name = parser->curr_token->literal;
@@ -122,11 +123,12 @@ statement_t *parse_let_statement(parser_t *parser) {
     char *error_string = (char *)malloc(MAX_ERROR_SIZE);
     snprintf(error_string, MAX_ERROR_SIZE, "Expected token:%s ,Got: %s",
              token_strings[ASSIGN], token_strings[parser->peek_token->type]);
-    printf("Expected token:%s ,Got: %s",
-             token_strings[ASSIGN], token_strings[parser->peek_token->type]);
+    printf("Expected token:%s ,Got: %s", token_strings[ASSIGN],
+           token_strings[parser->peek_token->type]);
     push_errors_parser(parser, error_string);
     exit(-1);
-    // FIXME: find a way to bubble errors and then print them in the root program
+    // FIXME: find a way to bubble errors and then print them in the root
+    // program
   }
   while (!is_curr_token(parser, SEMICOLON)) {
     next_token_parser(parser);
