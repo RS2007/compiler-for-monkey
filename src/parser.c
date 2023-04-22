@@ -136,6 +136,11 @@ statement_t *parse_let_statement(parser_t *parser) {
   return (statement_t *)stmt;
 }
 
+
+statement_t* parse_return_statement(parser_t* parser){
+  
+}
+
 statement_t *parse_statement(parser_t *parser) {
   switch (parser->curr_token->type) {
   case LET:
@@ -158,3 +163,4 @@ program_t *parse_program(parser_t *parser) {
   }
   return program_node;
 }
+
