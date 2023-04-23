@@ -11,7 +11,6 @@
 #define _GNU_SOURCE 1
 #endif
 
-
 #define DEFAULT_DYNAMIC_ARR_SIZE 10
 #define STRING_MAX_SIZE 1024
 #define MAX_ERROR_SIZE 1024
@@ -25,35 +24,41 @@
 
 char *print_program_string(void *program_node_cast_to_void) {
   program_t *program_node = ((program_t *)program_node_cast_to_void);
-  char *program_node_string = (char*)malloc(32768*sizeof(char));
+  char *program_node_string = (char *)malloc(32768 * sizeof(char));
   program_node_string[0] = '\0';
   for (int i = 0; i < program_node->statements_size; ++i) {
     statement_t *stmt = program_node->statements[i];
     char temp_string[512];
-    sprintf(temp_string,"%s\n", stmt->string((void *)stmt));
-    strcat(program_node_string,temp_string);
+    sprintf(temp_string, "%s\n", stmt->string((void *)stmt));
+    strcat(program_node_string, temp_string);
   }
-  strcat(program_node_string,"\0");
+  strcat(program_node_string, "\0");
   return program_node_string;
 }
 
 char *print_let_string(void *let_statement_cast_to_void) {
-  let_statement_t* let_statement = ((let_statement_t*)let_statement_cast_to_void);
-  char* let_node_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(let_node_string,"%s %s = %s",token_strings[let_statement->token],let_statement->iden_name,"unimplemented");
+  let_statement_t *let_statement =
+      ((let_statement_t *)let_statement_cast_to_void);
+  char *let_node_string = (char *)malloc(STRING_MAX_SIZE);
+  sprintf(let_node_string, "%s %s = %s", token_strings[let_statement->token],
+          let_statement->iden_name, "unimplemented");
   return let_node_string;
 }
 
 char *print_return_string(void *ret_statement_cast_to_void) {
-  ret_statement_t* ret_statement = ((ret_statement_t*)ret_statement_cast_to_void);
-  char* ret_node_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(ret_node_string,"%s %s",token_strings[ret_statement->token],"unimplemented");
+  ret_statement_t *ret_statement =
+      ((ret_statement_t *)ret_statement_cast_to_void);
+  char *ret_node_string = (char *)malloc(STRING_MAX_SIZE);
+  sprintf(ret_node_string, "%s %s", token_strings[ret_statement->token],
+          "unimplemented");
   return ret_node_string;
 }
 
-char *print_expression_string(void* expression_statement_cast_to_void) {
-  expression_statement_t* expression_statement = (expression_statement_t*)expression_statement_cast_to_void;
-  return expression_statement->expression->string((void*)expression_statement->expression);
+char *print_expression_string(void *expression_statement_cast_to_void) {
+  expression_statement_t *expression_statement =
+      (expression_statement_t *)expression_statement_cast_to_void;
+  return expression_statement->expression->string(
+      (void *)expression_statement->expression);
 }
 
 program_t *push_statements_program(program_t *program, statement_t *stmt) {
@@ -191,7 +196,6 @@ statement_t *parse_let_statement(parser_t *parser) {
   }
   return (statement_t *)stmt;
 }
-
 
 statement_t *parse_return_statement(parser_t *parser) {
   ret_statement_t *stmt = (ret_statement_t *)malloc(sizeof(ret_statement_t));

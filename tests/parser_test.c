@@ -54,7 +54,7 @@ int test_let_statements(void) {
   return 0;
 }
 
-int test_ret_statements(void){
+int test_ret_statements(void) {
   char *input = "return 5;"
                 "return 10;"
                 "return 993322;";
@@ -92,5 +92,5 @@ int main(void) {
   lexer_t *lexer = new_lexer(input, strlen(input));
   parser_t *parser = new_parser(lexer);
   program_t *program_node = parse_program(parser);
-  printf("%s",program_node->string((void*)program_node));
+  printf("%s", program_node->string((void *)program_node));
 }
