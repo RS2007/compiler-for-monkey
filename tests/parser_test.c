@@ -144,7 +144,7 @@ int main(void) {
                 (void *)program_node->statements[0]));
     exit(-1);
   }
-  if(program_node->statements[0]->expression->int_value != 5){
+  if (program_node->statements[0]->expression->int_value != 5) {
     fprintf(stderr, "Expected integer value is %d got %d", 5,
             program_node->statements[0]->expression->int_value);
     exit(-1);

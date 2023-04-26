@@ -215,7 +215,8 @@ statement_t *parse_return_statement(parser_t *parser) {
 }
 
 expression_t *parse_expression(parser_t *parser) {
-  prefix_parse_function prefix = prefix_parse_functions[parser->curr_token->type];
+  prefix_parse_function prefix =
+      prefix_parse_functions[parser->curr_token->type];
   // TODO: not sure about this check, might have to remove later
   if (prefix == NULL) {
     fprintf(stderr, "Prefix is null");
@@ -224,7 +225,6 @@ expression_t *parse_expression(parser_t *parser) {
   expression_t *left_expression = prefix(parser);
   return left_expression;
 }
-
 
 statement_t *parse_expression_statement(parser_t *parser) {
   expression_statement_t *stmt =
@@ -247,14 +247,13 @@ expression_t *parse_identifier(parser_t *parser) {
   return expression;
 }
 
-expression_t *parse_integer_literal(parser_t* parser) {
-  expression_t* expression = (expression_t*)malloc(sizeof(expression_statement_t));
+expression_t *parse_integer_literal(parser_t *parser) {
+  expression_t *expression =
+      (expression_t *)malloc(sizeof(expression_statement_t));
   expression->token = parser->curr_token->type;
   expression->int_value = atoi(parser->curr_token->literal);
   return expression;
 }
-
-
 
 statement_t *parse_statement(parser_t *parser) {
   switch (parser->curr_token->type) {
