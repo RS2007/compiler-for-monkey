@@ -85,12 +85,71 @@ int test_ret_statements(void) {
   return 0;
 }
 
-int main(void) {
+int test_string_method_on_statements(void) {
   char *input = "return 5;"
-                "return 10;"
+                "let a = 5;"
                 "return 993322;";
   lexer_t *lexer = new_lexer(input, strlen(input));
   parser_t *parser = new_parser(lexer);
   program_t *program_node = parse_program(parser);
   printf("%s", program_node->string((void *)program_node));
+  return 0;
+}
+
+int test_parsing_identifiers(void) {
+  char *input = "foobar;";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  int i;
+  if (program_node->statements_size != 1) {
+    fprintf(stderr, "Expected %d statements , got %d statements", 1,
+            program_node->statements_size);
+    exit(-1);
+  }
+
+  if (strcmp(program_node->statements[0]->iden_name, "foobar") != 0) {
+    fprintf(stderr, "Expected identifier name is %s, got %s", "foobar",
+            program_node->statements[0]->iden_name);
+    exit(-1);
+  }
+
+  if (strcmp(program_node->statements[0]->token_literal(
+                 (void *)program_node->statements[0]),
+             "foobar") != 0) {
+    fprintf(stderr, "Expected identifier name is %s, got %s", "foobar",
+            program_node->statements[0]->token_literal(
+                (void *)program_node->statements[0]));
+    exit(-1);
+  }
+  printf("All tests passed");
+  return 0;
+}
+
+int main(void) {
+  char *input = "5;";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  if (program_node->statements_size != 1) {
+    fprintf(stderr, "Expected %d statements , got %d statements", 1,
+            program_node->statements_size);
+    exit(-1);
+  }
+  if (strcmp(program_node->statements[0]->token_literal(
+                 (void *)program_node->statements[0]),
+             "5") != 0) {
+    fprintf(stderr, "Expected identifier name is %s, got %s", "5",
+            program_node->statements[0]->token_literal(
+                (void *)program_node->statements[0]));
+    exit(-1);
+  }
+  if(program_node->statements[0]->expression->int_value != 5){
+    fprintf(stderr, "Expected integer value is %d got %d", 5,
+            program_node->statements[0]->expression->int_value);
+    exit(-1);
+  }
+
+  printf("All tests passed");
+  return 0;
 }

@@ -117,6 +117,12 @@ char *ret_token_literal(void *ret_statement_cast_to_void) {
   return token_strings[ret_statement->token];
 }
 
+char *expression_token_literal(void *expression_statement_cast_to_void) {
+  expression_statement_t *expression_statement =
+      (expression_statement_t *)expression_statement_cast_to_void;
+  return expression_statement->iden_name;
+}
+
 void statement_node_let(void *let_statement_cast_to_void) {
   let_statement_t *let_statement =
       (let_statement_t *)let_statement_cast_to_void;
@@ -196,7 +202,6 @@ statement_t *parse_let_statement(parser_t *parser) {
   }
   return (statement_t *)stmt;
 }
-
 statement_t *parse_return_statement(parser_t *parser) {
   ret_statement_t *stmt = (ret_statement_t *)malloc(sizeof(ret_statement_t));
   stmt->token = parser->curr_token->type;
@@ -209,6 +214,48 @@ statement_t *parse_return_statement(parser_t *parser) {
   return (statement_t *)stmt;
 }
 
+expression_t *parse_expression(parser_t *parser) {
+  prefix_parse_function prefix = prefix_parse_functions[parser->curr_token->type];
+  // TODO: not sure about this check, might have to remove later
+  if (prefix == NULL) {
+    fprintf(stderr, "Prefix is null");
+    exit(-1);
+  }
+  expression_t *left_expression = prefix(parser);
+  return left_expression;
+}
+
+
+statement_t *parse_expression_statement(parser_t *parser) {
+  expression_statement_t *stmt =
+      (expression_statement_t *)malloc(sizeof(expression_statement_t));
+  stmt->token = parser->curr_token->type;
+  stmt->expression = parse_expression(parser);
+  stmt->iden_name = parser->curr_token->literal;
+  stmt->token_literal = expression_token_literal;
+  if (is_peek_token(parser, SEMICOLON)) {
+    next_token_parser(parser);
+  }
+  return (statement_t *)stmt;
+}
+
+expression_t *parse_identifier(parser_t *parser) {
+  expression_t *expression =
+      (expression_t *)malloc(sizeof(expression_statement_t));
+  expression->token = parser->curr_token->type;
+  expression->value = (Value)parser->curr_token->literal;
+  return expression;
+}
+
+expression_t *parse_integer_literal(parser_t* parser) {
+  expression_t* expression = (expression_t*)malloc(sizeof(expression_statement_t));
+  expression->token = parser->curr_token->type;
+  expression->int_value = atoi(parser->curr_token->literal);
+  return expression;
+}
+
+
+
 statement_t *parse_statement(parser_t *parser) {
   switch (parser->curr_token->type) {
   case LET:
@@ -216,7 +263,7 @@ statement_t *parse_statement(parser_t *parser) {
   case RETURN:
     return parse_return_statement(parser);
   default:
-    return NULL;
+    return parse_expression_statement(parser);
   }
 }
 

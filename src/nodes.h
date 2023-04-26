@@ -1,6 +1,7 @@
 #pragma once
 
 #include "token.h"
+#include <stdio.h>
 
 typedef enum node_type {
   PROGRAM,
@@ -24,10 +25,12 @@ typedef char *(*String)(void *);
 
 typedef struct expression_t {
   node_type type;
+  token_type token;
   Token_literal token_literal;
   Value value;
   Expression_node expression_node;
   String string;
+  int int_value;
 } expression_t;
 
 typedef struct statement_t {
@@ -61,6 +64,7 @@ typedef struct let_statement_t {
   Statement_node statement_node;
   token_type token;
   char *iden_name;
+  expression_t *expression;
   String string;
   // TODO: this field is not correct, fix this asap expression_type value;
 } let_statement_t;
@@ -88,3 +92,31 @@ typedef struct expression_statement_t {
   expression_t *expression;
   String string;
 } expression_statement_t;
+
+typedef struct integer_literal_expression_t {
+  node_type type;
+  token_type token;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+  String string;
+  int int_value;
+} integer_literal_expression_t;
+
+typedef expression_t *(*prefix_parse_function)();
+typedef expression_t *(*infix_parse_function)();
+
+expression_t *parse_identifier();
+expression_t *parse_integer_literal();
+
+static prefix_parse_function prefix_parse_functions[] = {
+    NULL,
+    NULL,
+    parse_identifier,
+    parse_integer_literal,
+};
+
+static infix_parse_function infix_parse_functions[] = {
+
+};
+
