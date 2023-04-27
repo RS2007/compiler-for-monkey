@@ -31,6 +31,8 @@ typedef struct expression_t {
   Expression_node expression_node;
   String string;
   int int_value;
+  struct expression_t *right;
+  char *op;
 } expression_t;
 
 typedef struct statement_t {
@@ -101,19 +103,32 @@ typedef struct integer_literal_expression_t {
   Expression_node expression_node;
   String string;
   int int_value;
+  expression_t *right;
+  char *op;
 } integer_literal_expression_t;
+
+typedef struct prefix_expression_t {
+  node_type type;
+  token_type token;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+  String string;
+  int int_value;
+  expression_t *right;
+  char *op;
+} prefix_expression_t;
 
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();
 
 expression_t *parse_identifier();
 expression_t *parse_integer_literal();
+expression_t *parse_prefix_expression();
 
 static prefix_parse_function prefix_parse_functions[] = {
-    NULL,
-    NULL,
-    parse_identifier,
-    parse_integer_literal,
+    NULL, NULL, parse_identifier,        parse_integer_literal,
+    NULL, NULL, parse_prefix_expression, parse_prefix_expression,
 };
 
 static infix_parse_function infix_parse_functions[] = {

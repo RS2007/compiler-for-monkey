@@ -126,7 +126,7 @@ int test_parsing_identifiers(void) {
   return 0;
 }
 
-int main(void) {
+int test_parsing_integer_literal(void) {
   char *input = "5;";
   lexer_t *lexer = new_lexer(input, strlen(input));
   parser_t *parser = new_parser(lexer);
@@ -152,4 +152,50 @@ int main(void) {
 
   printf("All tests passed");
   return 0;
+}
+
+int main(void) {
+  typedef struct prefix_struct_t {
+    char *input;
+    char *operator;
+    int integer_value;
+  } prefix_struct_t;
+  prefix_struct_t tests[2];
+  prefix_struct_t test1, test2;
+  test1.input = strdup("!5");
+  test1.operator= strdup("!");
+  test1.integer_value = 5;
+  test2.input = strdup("-15");
+  test2.operator= strdup("-");
+  test2.integer_value = 15;
+  tests[0] = test1;
+  tests[1] = test2;
+
+  int i;
+  for (i = 0; i < 2; ++i) {
+    prefix_struct_t curr_test = tests[i];
+    lexer_t *lexer = new_lexer(curr_test.input, strlen(curr_test.input));
+    parser_t *parser = new_parser(lexer);
+    program_t *program_node = parse_program(parser);
+
+    if (program_node->statements_size != 1) {
+      fprintf(stderr, "Expected %d statements , got %d statements", 1,
+              program_node->statements_size);
+      exit(-1);
+    }
+    statement_t *test_node = program_node->statements[0];
+
+    if (strcmp(test_node->expression->op, curr_test.operator) != 0) {
+      fprintf(stderr, "Expected %s operand , got %s", test_node->expression->op,
+              curr_test.operator);
+      exit(-1);
+    }
+    // check for literal
+    if (test_node->expression->right->int_value != curr_test.integer_value) {
+      fprintf(stderr, "Expected %d operand , got %d",
+              test_node->expression->right->int_value, curr_test.integer_value);
+      exit(-1);
+    }
+  }
+  printf("All tests passed");
 }

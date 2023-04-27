@@ -266,6 +266,16 @@ statement_t *parse_statement(parser_t *parser) {
   }
 }
 
+expression_t *parse_prefix_expression(parser_t *parser) {
+  expression_t *expression =
+      (expression_t *)malloc(sizeof(expression_statement_t));
+  expression->token = parser->curr_token->type;
+  expression->op = parser->curr_token->literal;
+  next_token_parser(parser);
+  expression->right = parse_expression(parser);
+  return expression;
+}
+
 program_t *parse_program(parser_t *parser) {
   program_t *program_node = new_program_node();
   while (parser->curr_token->type != END_OF_FILE) {
