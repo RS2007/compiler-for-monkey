@@ -299,4 +299,30 @@ int test_operator_precedence()
     return 0;
 }
 
-int main(void) { return test_operator_precedence(); }
+int boolean_parse_test(void){
+  char* tests[] = {"true;","false;"};
+    // ,"let foobar = true","let barfoo = false"
+  int expected_values[] = {1,0};
+  int tests_size = sizeof(tests)/sizeof(tests[0]);
+  int i;
+  for(i = 0;i<tests_size;++i){
+    char* curr_test = tests[i];
+    lexer_t* lexer = new_lexer(curr_test, strlen(curr_test));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+    if(program_node->statements_size != 1){
+      fprintf(stderr,"Statements size expected to be 1, got %d",program_node->statements_size);
+      exit(-1);
+    }
+    if(program_node->statements[0]->expression->boolean_value != expected_values[i]){
+      fprintf(stdout,"Error for input %s",tests[i]);
+      fprintf(stdout,"Boolean value expected: %d,%d\n",expected_values[i],program_node->statements[0]->expression->boolean_value);
+      fprintf(stderr,"Statements value expected to be %d, got %d\n",program_node->statements[0]->expression->boolean_value,expected_values[i]);
+      exit(-1);
+    }
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int main(void) { return boolean_parse_test(); }

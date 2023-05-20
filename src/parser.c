@@ -327,6 +327,25 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
     return integer_literal_string;
 }
 
+char* get_boolean_expression_string(void* boolean_expression_cast_to_void){
+  return "hello";
+}
+
+expression_t* parse_boolean_expression(parser_t* parser)
+{
+    boolean_literal_expression_t* expression = (boolean_literal_expression_t*)malloc(sizeof(expression_t));
+    expression->token = parser->curr_token->type;
+    bool is_true = strcmp(parser->curr_token->literal,"true") == 0;
+    bool is_false = strcmp(parser->curr_token->literal,"false") == 0;
+    if(!is_true && !is_false){
+      fprintf(stderr,"token literal must be a boolean");
+      exit(-1);
+    }
+    expression->boolean_value = is_true?true:false;
+    expression->string = get_boolean_expression_string;
+    return (expression_t*)expression;
+}
+
 expression_t* parse_integer_literal(parser_t* parser)
 {
     expression_t* expression = (expression_t*)malloc(sizeof(expression_statement_t));
