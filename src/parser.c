@@ -16,14 +16,6 @@
 #define STRING_MAX_SIZE 1024
 #define MAX_ERROR_SIZE 1024
 #define unimplemented printf("\nUnimplemented\n");
-#if 1
-#define debug(...)           \
-    {                        \
-        printf(__VA_ARGS__); \
-    }
-#else
-#define debug(...)
-#endif
 
 char* print_program_string(void* program_node_cast_to_void)
 {
@@ -328,7 +320,10 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
 }
 
 char* get_boolean_expression_string(void* boolean_expression_cast_to_void){
-  return "hello";
+  boolean_literal_expression_t* boolean_expression = (boolean_literal_expression_t*)boolean_expression_cast_to_void;
+  char* boolean_string = (char*)malloc(STRING_MAX_SIZE);
+  sprintf(boolean_string,"%s",boolean_expression->boolean_value?"true":"false");
+  return boolean_string;
 }
 
 expression_t* parse_boolean_expression(parser_t* parser)

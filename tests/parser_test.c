@@ -106,7 +106,6 @@ int test_parsing_identifiers(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
-    int i;
     if (program_node->statements_size != 1) {
         fprintf(stderr, "Expected %d statements , got %d statements", 1,
             program_node->statements_size);
@@ -301,9 +300,18 @@ int test_operator_precedence()
 
 int boolean_parse_test(void){
   char* tests[] = {"true;","false;"};
-    // ,"let foobar = true","let barfoo = false"
+    // ,"let foobar = true","let barfoo = false"};
+  // char* tests2[] = {"let foobar = true;","let barfoo = false;"};
+  typedef struct test_precedence_t {
+    char* input;
+    char* expected;
+  } test_precedence_t;
+  test_precedence_t tests3[] = {{"true;","true"},{"false;","false"},
+  {"3 > 5 == false;","((3 > 5) == false)"},{"3 < 5 == true;","((3 < 5) == true)"}};
+  //TODO: test later for the infix expressions(after finishing complete implementation of let) 
   int expected_values[] = {1,0};
   int tests_size = sizeof(tests)/sizeof(tests[0]);
+  int tests3_size = sizeof(tests3)/sizeof(tests3[0]);
   int i;
   for(i = 0;i<tests_size;++i){
     char* curr_test = tests[i];
@@ -318,6 +326,21 @@ int boolean_parse_test(void){
       fprintf(stdout,"Error for input %s",tests[i]);
       fprintf(stdout,"Boolean value expected: %d,%d\n",expected_values[i],program_node->statements[0]->expression->boolean_value);
       fprintf(stderr,"Statements value expected to be %d, got %d\n",program_node->statements[0]->expression->boolean_value,expected_values[i]);
+      exit(-1);
+    }
+  }
+  for(i = 0;i<tests3_size;++i){
+    test_precedence_t curr_test = tests3[i];
+    lexer_t* lexer = new_lexer(curr_test.input,strlen(curr_test.input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+    if(program_node->statements_size != 1){
+      fprintf(stderr,"Statements size expected to be 1, got %d",program_node->statements_size);
+      exit(-1);
+    }
+    char* program_string = program_node->string((void*)program_node);
+    if(strcmp(program_string,curr_test.expected) != 0){
+      fprintf(stderr,"Expected %s, got %s",program_string,curr_test.expected);
       exit(-1);
     }
   }
