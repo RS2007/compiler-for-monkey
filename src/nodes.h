@@ -33,6 +33,7 @@ typedef struct expression_t {
   int int_value;
   struct expression_t *right;
   char *op;
+  struct expression_t *left;
 } expression_t;
 
 typedef struct statement_t {
@@ -105,6 +106,7 @@ typedef struct integer_literal_expression_t {
   int int_value;
   expression_t *right;
   char *op;
+  expression_t *left;
 } integer_literal_expression_t;
 
 typedef struct prefix_expression_t {
@@ -117,7 +119,21 @@ typedef struct prefix_expression_t {
   int int_value;
   expression_t *right;
   char *op;
+  expression_t *left;
 } prefix_expression_t;
+
+typedef struct infix_expression_t {
+  node_type type;
+  token_type token;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+  String string;
+  int int_value;
+  expression_t *right;
+  char *op;
+  expression_t *left;
+} infix_expression_t;
 
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();
@@ -126,11 +142,31 @@ expression_t *parse_identifier();
 expression_t *parse_integer_literal();
 expression_t *parse_prefix_expression();
 
+expression_t *parse_infix_function();
+
 static prefix_parse_function prefix_parse_functions[] = {
     NULL, NULL, parse_identifier,        parse_integer_literal,
     NULL, NULL, parse_prefix_expression, parse_prefix_expression,
 };
 
 static infix_parse_function infix_parse_functions[] = {
+    NULL, NULL, NULL, NULL, NULL,
+    parse_infix_function, // SUM
+    NULL,
+    parse_infix_function, // SUM,
+    parse_infix_function, // PRODUCT,
+    parse_infix_function, // PRODUCT,
+    parse_infix_function, // LESSGREATER,
+    parse_infix_function, // LESSGREATER,
 
+    // Delimiters
+    NULL, NULL,
+
+    NULL, NULL, NULL, NULL,
+
+    // Keywords
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+
+    parse_infix_function, // EQUALS,
+    parse_infix_function, // NOTEQ
 };
