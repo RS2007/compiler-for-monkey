@@ -308,10 +308,26 @@ int boolean_parse_test(void){
   } test_precedence_t;
   test_precedence_t tests3[] = {{"true;","true"},{"false;","false"},
   {"3 > 5 == false;","((3 > 5) == false)"},{"3 < 5 == true;","((3 < 5) == true)"}};
+  typedef struct infix_test_t {
+    char* input;
+    bool left; 
+    char* op;
+    bool right;
+  } infix_test_t;
+  infix_test_t tests4[] = {{"true == true",true,"==",true},{"true != false",true,"!=",false},
+  {"false == false",false,"==",false}};
+  typedef struct prefix_test_t {
+    char* input;
+    char* op;
+    bool value;
+  } prefix_test_t;
+  prefix_test_t tests5[] = {{"!true","!",true},{"!false","!",false}};
   //TODO: test later for the infix expressions(after finishing complete implementation of let) 
   int expected_values[] = {1,0};
   int tests_size = sizeof(tests)/sizeof(tests[0]);
   int tests3_size = sizeof(tests3)/sizeof(tests3[0]);
+  int tests4_size = sizeof(tests4)/sizeof(tests4[0]);
+  int tests5_size = sizeof(tests5)/sizeof(tests5[0]);
   int i;
   for(i = 0;i<tests_size;++i){
     char* curr_test = tests[i];
@@ -342,6 +358,38 @@ int boolean_parse_test(void){
     if(strcmp(program_string,curr_test.expected) != 0){
       fprintf(stderr,"Expected %s, got %s",program_string,curr_test.expected);
       exit(-1);
+    }
+  }
+  for(i = 0;i<tests4_size;++i){
+    infix_test_t curr_test = tests4[i];
+    lexer_t* lexer = new_lexer(curr_test.input,strlen(curr_test.input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+    if(strcmp(program_node->statements[0]->expression->op,curr_test.op) != 0){
+        fprintf(stderr,"Expected %s,got %s",program_node->statements[0]->expression->op,curr_test.op);
+        exit(-1);
+    }
+    if(program_node->statements[0]->expression->left->boolean_value != curr_test.left){
+        fprintf(stderr,"Expected %d,got %d",program_node->statements[0]->expression->left->boolean_value != curr_test.left);
+        exit(-1);
+    }
+    if(program_node->statements[0]->expression->right->boolean_value != curr_test.right){
+        fprintf(stderr,"Expected %d,got %d",program_node->statements[0]->expression->right->boolean_value != curr_test.right);
+        exit(-1);
+    }
+  }
+  for(i = 0;i<tests5_size;++i){
+    prefix_test_t curr_test = tests5[i];
+    lexer_t* lexer = new_lexer(curr_test.input,strlen(curr_test.input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+    if(strcmp(program_node->statements[0]->expression->op,curr_test.op) != 0){
+        fprintf(stderr,"Expected %s, got %s",program_node->statements[0]->expression->op,curr_test.op);
+        exit(-1);
+    }
+    if(program_node->statements[0]->expression->right->boolean_value != curr_test.value){
+        fprintf(stderr,"Expected %d, got %d",program_node->statements[0]->expression->right->boolean_value,curr_test.value);
+        exit(-1);
     }
   }
   fprintf(stdout, "All test cases passed ✅");
