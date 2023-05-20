@@ -35,3 +35,7 @@ test-debug: $(SOURCES_HEADERS) $(TESTS)
 
 clean: $(BIN)
 	rm -rf $(BIN)
+
+
+temp: $(SOURCES_HEADERS) $(TESTS)
+	$(CC) -o ./bin/parser_test ${TEST_FOLDER}/parser_test.c ${SOURCES_WITHOUT_MAIN_REPL} $(C_FLAGS) && ./bin/parser_test

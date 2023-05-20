@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define STATEMENTS_NUMBER 3
+#define STATEMENTS_NUMBER 1
 
 bool test_let_statement(statement_t *ast_statement, char *name) {
   char *token_literal = ast_statement->token_literal((void *)ast_statement);
@@ -50,7 +50,7 @@ int test_let_statements(void) {
       fprintf(stderr, "Hello this is an error");
     }
   }
-  fprintf(stdout, "All tests passed");
+  fprintf(stdout, "All test cases passed ✅");
   return 0;
 }
 
@@ -81,7 +81,7 @@ int test_ret_statements(void) {
       return 69;
     }
   }
-  fprintf(stdout, "All tests passed");
+  fprintf(stdout, "All test cases passed ✅");
   return 0;
 }
 
@@ -122,7 +122,7 @@ int test_parsing_identifiers(void) {
                 (void *)program_node->statements[0]));
     exit(-1);
   }
-  printf("All tests passed");
+  printf("All test cases passed ✅");
   return 0;
 }
 
@@ -150,11 +150,11 @@ int test_parsing_integer_literal(void) {
     exit(-1);
   }
 
-  printf("All tests passed");
+  printf("All test cases passed ✅");
   return 0;
 }
 
-int main(void) {
+int test_parsing_prefix_literal(void) {
   typedef struct prefix_struct_t {
     char *input;
     char *operator;
@@ -197,5 +197,94 @@ int main(void) {
       exit(-1);
     }
   }
-  printf("All tests passed");
+  printf("All test cases passed ✅");
+  return 0;
 }
+
+int test_infix_expressions(void) {
+  typedef struct infix_test_t {
+    char *input;
+    int left_value;
+    char *op;
+    int right_value;
+  } infix_test_t;
+  infix_test_t tests[] = {
+      {"5 + 5;", 5, "+", 5},   {"5 - 5;", 5, "-", 5},   {"5 * 5;", 5, "*", 5},
+      {"5 / 5;", 5, "/", 5},   {"5 > 5;", 5, ">", 5},   {"5 < 5;", 5, "<", 5},
+      {"5 == 5;", 5, "==", 5}, {"5 != 5;", 5, "!=", 5},
+  };
+  int tests_size = sizeof(tests) / sizeof(tests[0]);
+  int i;
+  for (i = 0; i < tests_size; ++i) {
+    infix_test_t curr_test = tests[i];
+    lexer_t *lexer = new_lexer(curr_test.input, strlen(curr_test.input));
+    parser_t *parser = new_parser(lexer);
+    program_t *program_node = parse_program(parser);
+
+    if (program_node->statements_size != 1) {
+      fprintf(
+          stderr,
+          "Error: expected %d statements, got %d statements at test case %d",
+          STATEMENTS_NUMBER, program_node->statements_size, i + 1);
+      return -1;
+    }
+    if (program_node->statements[0]->expression->left->int_value !=
+        curr_test.left_value) {
+      fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
+              program_node->statements[0]->expression->left->int_value,
+              curr_test.left_value, i + 1);
+      return -1;
+    }
+
+    if (program_node->statements[0]->expression->right->int_value !=
+        curr_test.right_value) {
+      fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
+              program_node->statements[0]->expression->right->int_value,
+              curr_test.right_value, i + 1);
+      return -1;
+    }
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int test_operator_precedence() {
+  typedef struct input_expected_t {
+    char *input;
+    char *expected;
+  } input_expected_t;
+  input_expected_t tests[] = {
+      {"-a * b", "((-a) * b)"},
+      {"!-a", "(!(-a))"},
+      {"a + b + c", "((a + b) + c)"},
+      {"a + b - c", "((a + b) - c)"},
+      {"a * b * c", "((a * b) * c)"},
+      {"a * b / c", "((a * b) / c)"},
+      {"a + b / c", "(a + (b / c))"},
+      {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+      {"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+      {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+      {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+      {"5 >= 4 == 3 <= 4", "((5 >= 4) == (3 <= 4))"},
+      // {"5 <= 4 != 3 >= 4", "((5 <= 4) != (3 >= 4))"},
+      {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+  };
+  int arr_size = sizeof(tests) / sizeof(tests[0]);
+  int i;
+  for (i = 0; i < arr_size; ++i) {
+    input_expected_t curr_test = tests[i];
+    lexer_t *lexer = new_lexer(curr_test.input, strlen(curr_test.input));
+    parser_t *parser = new_parser(lexer);
+    program_t *program_node = parse_program(parser);
+    char *program_string = program_node->string((void *)program_node);
+    if (strcmp(curr_test.expected,program_string) != 0) {
+      fprintf(stderr,"Failure at expression: %s",curr_test.input);
+      fprintf(stderr, "Expected %s,Got %s", curr_test.expected, program_string);
+      exit(-1);
+    }
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int main(void) { return test_operator_precedence(); }

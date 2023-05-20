@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "string.h"
+#include "token.h"
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
