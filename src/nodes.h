@@ -161,6 +161,7 @@ expression_t *parse_identifier();
 expression_t *parse_integer_literal();
 expression_t *parse_prefix_expression();
 expression_t *parse_boolean_expression();
+expression_t *parse_grouped_expression();
 
 expression_t *parse_infix_function();
 
@@ -179,7 +180,7 @@ static prefix_parse_function prefix_parse_functions[] = {
     parse_prefix_expression,
     NULL,
     NULL,
-    NULL,
+    parse_grouped_expression,
     NULL,
     NULL,
     NULL,

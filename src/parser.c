@@ -74,7 +74,7 @@ char* print_prefix_expression_string(void* expression_statement_cast_to_void)
 {
     expression_t* expression_statement = (expression_t*)expression_statement_cast_to_void;
     char* prefix_expression_string = (char*)malloc(STRING_MAX_SIZE);
-    sprintf(prefix_expression_string,"(%s%s)", expression_statement->op,
+    sprintf(prefix_expression_string, "(%s%s)", expression_statement->op,
         expression_statement->right->string(
             (void*)expression_statement->right));
     return prefix_expression_string;
@@ -265,10 +265,10 @@ expression_t* parse_expression(parser_t* parser, precedence_t precedence)
     prefix_parse_function prefix = prefix_parse_functions[parser->curr_token->type];
     // TODO: not sure about this check, might have to remove later
     if (prefix == NULL) {
-      fprintf(stderr,"Failure at %s\n",parser->lexer->input);
-      fprintf(stderr,"Failure while parsing: %d.%s\n",parser->curr_token->type,parser->curr_token->literal);    
-      fprintf(stderr, "Prefix is null\n");
-      return NULL;
+        fprintf(stderr, "Failure at %s\n", parser->lexer->input);
+        fprintf(stderr, "Failure while parsing: %d.%s\n", parser->curr_token->type, parser->curr_token->literal);
+        fprintf(stderr, "Prefix is null\n");
+        return NULL;
     }
     expression_t* left_expression = prefix(parser);
 
@@ -281,6 +281,19 @@ expression_t* parse_expression(parser_t* parser, precedence_t precedence)
         left_expression = infix(parser, left_expression);
     }
     return left_expression;
+}
+
+expression_t* parse_grouped_expression(parser_t* parser)
+{
+    expression_t* expression;
+    next_token_parser(parser);
+    expression = parse_expression(parser, LOWEST);
+    if (!is_peek_token(parser, RPAREN)) {
+        assert(false);
+        return NULL;
+    }
+    next_token_parser(parser);
+    return expression;
 }
 
 statement_t* parse_expression_statement(parser_t* parser)
@@ -319,24 +332,25 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
     return integer_literal_string;
 }
 
-char* get_boolean_expression_string(void* boolean_expression_cast_to_void){
-  boolean_literal_expression_t* boolean_expression = (boolean_literal_expression_t*)boolean_expression_cast_to_void;
-  char* boolean_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(boolean_string,"%s",boolean_expression->boolean_value?"true":"false");
-  return boolean_string;
+char* get_boolean_expression_string(void* boolean_expression_cast_to_void)
+{
+    boolean_literal_expression_t* boolean_expression = (boolean_literal_expression_t*)boolean_expression_cast_to_void;
+    char* boolean_string = (char*)malloc(STRING_MAX_SIZE);
+    sprintf(boolean_string, "%s", boolean_expression->boolean_value ? "true" : "false");
+    return boolean_string;
 }
 
 expression_t* parse_boolean_expression(parser_t* parser)
 {
     boolean_literal_expression_t* expression = (boolean_literal_expression_t*)malloc(sizeof(expression_t));
     expression->token = parser->curr_token->type;
-    bool is_true = strcmp(parser->curr_token->literal,"true") == 0;
-    bool is_false = strcmp(parser->curr_token->literal,"false") == 0;
-    if(!is_true && !is_false){
-      fprintf(stderr,"token literal must be a boolean");
-      exit(-1);
+    bool is_true = strcmp(parser->curr_token->literal, "true") == 0;
+    bool is_false = strcmp(parser->curr_token->literal, "false") == 0;
+    if (!is_true && !is_false) {
+        fprintf(stderr, "token literal must be a boolean");
+        exit(-1);
     }
-    expression->boolean_value = is_true?true:false;
+    expression->boolean_value = is_true ? true : false;
     expression->string = get_boolean_expression_string;
     return (expression_t*)expression;
 }
