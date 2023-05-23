@@ -2,12 +2,12 @@
 #include <stdlib.h>
 
 typedef enum precedeece {
-    LOWEST,
-    EQUALS,
-    LESSGREATER,
-    SUM,
-    PRODUCT,
-    PREFIX,
+  LOWEST,
+  EQUALS,
+  LESSGREATER,
+  SUM,
+  PRODUCT,
+  PREFIX,
 } precedence_t;
 
 static precedence_t precedences_array[] = {

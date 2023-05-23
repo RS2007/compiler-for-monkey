@@ -80,6 +80,21 @@ char* print_prefix_expression_string(void* expression_statement_cast_to_void)
     return prefix_expression_string;
 }
 
+char* print_block_statement(void* block_statement_cast_to_void)
+{
+    block_statement_t* block_statement = (block_statement_t*)malloc(sizeof(block_statement_t));
+    char* block_statement_string = (char*)malloc(STRING_MAX_SIZE);
+    block_statement_string[0] = '\0';
+    for (int i = 0; i < block_statement->statements_length; ++i) {
+        statement_t* stmt = block_statement->statements[i];
+        char temp_string[512];
+        sprintf(temp_string, "%s", stmt->string((void*)stmt));
+        strcat(block_statement_string, temp_string);
+    }
+    strcat(block_statement_string, "\0");
+    return block_statement_string;
+}
+
 precedence_t peek_precedence(parser_t* parser)
 {
     precedence_t precedence = precedences_array[parser->peek_token->type];
@@ -107,6 +122,15 @@ program_t* push_statements_program(program_t* program, statement_t* stmt)
     }
     program->statements[program->statements_size++] = stmt;
     return program;
+}
+
+block_statement_t* push_statements_block_statement(block_statement_t* block_statement, statement_t* stmt)
+{
+    if (block_statement->statements_length + 1 > block_statement->statements_capacity) {
+        block_statement->statements = realloc(block_statement->statements, block_statement->statements_capacity * 2);
+    }
+    block_statement->statements[block_statement->statements_length++] = stmt;
+    return block_statement;
 }
 
 parser_t* push_errors_parser(parser_t* parser, char* error_msg)
@@ -332,6 +356,20 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
     return integer_literal_string;
 }
 
+char* get_if_expression_string(void* if_expression_cast_to_void)
+{
+    if_expression_t* if_expression = malloc(sizeof(if_expression_t));
+    char* if_expression_string = (char*)malloc(STRING_MAX_SIZE);
+    if_expression_string[0] = '\0';
+    int i;
+    sprintf(if_expression_string, "if %s %s", if_expression->condition->string((void*)if_expression->condition), if_expression->consequence->string((void*)if_expression->consequence));
+    if (if_expression->alternative != NULL) {
+        strcat(if_expression_string, "else ");
+        strcat(if_expression_string, if_expression->alternative->string((void*)if_expression->alternative));
+    }
+    return if_expression_string;
+}
+
 char* get_boolean_expression_string(void* boolean_expression_cast_to_void)
 {
     boolean_literal_expression_t* boolean_expression = (boolean_literal_expression_t*)boolean_expression_cast_to_void;
@@ -374,6 +412,64 @@ statement_t* parse_statement(parser_t* parser)
     default:
         return parse_expression_statement(parser);
     }
+}
+
+statement_t* parse_block_statement(parser_t* parser)
+{
+    // setup the block_statement
+    block_statement_t* block_statement = malloc(sizeof(block_statement_t));
+    block_statement->statements_length = 0;
+    block_statement->statements_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
+    block_statement->statements = calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(statement_t));
+    int i;
+    for (i = 0; i < block_statement->statements_length; ++i) {
+        block_statement->statements[i] = malloc(sizeof(statement_t));
+    }
+
+    // actual parsing
+
+    if (!is_curr_token(parser, RBRACE) && !is_curr_token(parser, END_OF_FILE)) {
+        statement_t* statement = parse_statement(parser);
+        if (statement != NULL) {
+            push_statements_block_statement(block_statement, statement);
+        }
+        next_token_parser(parser);
+    }
+    return (statement_t*)block_statement;
+}
+
+expression_t* parse_if_expression(parser_t* parser)
+{
+    if_expression_t* if_expression = malloc(sizeof(if_expression_t));
+    if (!is_peek_token(parser, LPAREN)) {
+        fprintf(stderr, "Expected ( got %s", parser->peek_token->literal);
+        exit(-1);
+    }
+    // FIXME: There is an issue here related to the succession of tokens, check it and write a proper implementation(Priority#1)
+    next_token_parser(parser);
+    next_token_parser(parser);
+    if_expression->condition = parse_expression(parser, LOWEST);
+    if (!is_peek_token(parser, RPAREN)) {
+        fprintf(stderr, "Expected ) got %s", parser->peek_token->literal);
+        exit(-1);
+    }
+    next_token_parser(parser);
+    if (!is_peek_token(parser, LBRACE)) {
+        fprintf(stderr, "Expected { got %s", parser->peek_token->literal);
+        exit(-1);
+    }
+    next_token_parser(parser);
+    next_token_parser(parser);
+    if_expression->consequence = (block_statement_t*)parse_block_statement(parser);
+    if (is_peek_token(parser, ELSE)) {
+        next_token_parser(parser);
+        if (is_peek_token(parser, LBRACE)) {
+            next_token_parser(parser);
+            next_token_parser(parser);
+            if_expression->alternative = (block_statement_t*)parse_block_statement(parser);
+        }
+    }
+    return (expression_t*)if_expression;
 }
 
 expression_t* parse_prefix_expression(parser_t* parser)

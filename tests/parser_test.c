@@ -371,11 +371,11 @@ int boolean_parse_test(void)
             exit(-1);
         }
         if (program_node->statements[0]->expression->left->boolean_value != curr_test.left) {
-            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->left->boolean_value != curr_test.left);
+            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->left->boolean_value, curr_test.left);
             exit(-1);
         }
         if (program_node->statements[0]->expression->right->boolean_value != curr_test.right) {
-            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->right->boolean_value != curr_test.right);
+            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->right->boolean_value, curr_test.right);
             exit(-1);
         }
     }
@@ -412,7 +412,7 @@ int test_grouped_expressions(void)
     int i;
     for (i = 0; i < tests_size; ++i) {
         grouped_expr_test_t curr_test = tests[i];
-        lexer_t* lexer = new_lexer(curr_test.input,strlen(curr_test.input));
+        lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
         char* program_string = program_node->string((void*)program_node);
@@ -425,4 +425,89 @@ int test_grouped_expressions(void)
     return 0;
 }
 
-int main(void) { return test_grouped_expressions(); }
+int test_if_expression(void)
+{
+    char* input = "if (x<y) { x }";
+    lexer_t* lexer = new_lexer(input, strlen(input));
+    parser_t* paresr = new_parser(lexer);
+    program_t* program_node = parse_program(paresr);
+    if (program_node->statements_size != 1) {
+        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_size, 1);
+        exit(-1);
+    }
+    expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+    if_expression_t* expr = (if_expression_t*)stmt->expression;
+    if (strcmp(expr->condition->op, "<") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "<", expr->condition->op);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->condition->left->value, "x") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->condition->left->value);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->condition->right->value, "y") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "y", (char*)expr->condition->right->value);
+        exit(-1);
+    }
+    if (expr->consequence->statements_length != 1) {
+        fprintf(stderr, "Expected %d,got %d", 1, expr->consequence->statements_length);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->consequence->statements[0]->expression->value, "x")) {
+        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->consequence->expression->value);
+        exit(-1);
+    }
+    if (expr->alternative != NULL) {
+        fprintf(stderr, "Alternative should be null");
+        exit(-1);
+    }
+    fprintf(stdout, "All test cases passed ✅");
+    return 0;
+}
+
+int test_if_else_expression(void)
+{
+    char* input = "if (x<y) { x } else { y }";
+    lexer_t* lexer = new_lexer(input, strlen(input));
+    parser_t* paresr = new_parser(lexer);
+    program_t* program_node = parse_program(paresr);
+    if (program_node->statements_size != 1) {
+        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_size, 1);
+        exit(-1);
+    }
+    expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+    if_expression_t* expr = (if_expression_t*)stmt->expression;
+    if (strcmp(expr->condition->op, "<") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "<", expr->condition->op);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->condition->left->value, "x") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->condition->left->value);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->condition->right->value, "y") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "y", (char*)expr->condition->right->value);
+        exit(-1);
+    }
+    if (expr->consequence->statements_length != 1) {
+        fprintf(stderr, "Expected %d,got %d", 1, expr->consequence->statements_length);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->consequence->statements[0]->expression->value, "x")) {
+        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->consequence->statements[0]->expression->value);
+        exit(-1);
+    }
+    if (strcmp((char*)expr->alternative->statements[0]->expression->value, "y")) {
+        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->alternative->statements[0]->expression->value);
+        exit(-1);
+    }
+    fprintf(stdout, "All test cases passed ✅");
+    return 0;
+}
+
+int main(void)
+{
+    test_if_expression();
+    test_if_else_expression();
+    return 0;
+}

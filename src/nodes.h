@@ -48,6 +48,9 @@ typedef struct statement_t {
   char *iden_name;
   expression_t *expression;
   String string;
+  struct statement_t **statements;
+  int statements_length;
+  int statements_capacity;
 } statement_t;
 
 typedef struct program_t {
@@ -72,6 +75,9 @@ typedef struct let_statement_t {
   expression_t *expression;
   String string;
   // TODO: this field is not correct, fix this asap expression_type value;
+  statement_t **statements;
+  int statements_length;
+  int statements_capacity;
 } let_statement_t;
 
 typedef struct ret_statement_t {
@@ -84,7 +90,26 @@ typedef struct ret_statement_t {
   char *iden_name;
   expression_t *expression;
   String string;
+  statement_t **statements;
+  int statements_length;
+  int statements_capacity;
 } ret_statement_t;
+
+typedef struct block_statement_t {
+  node_type type;
+  Token_literal token_literal;
+  Value value;
+  char *iden_value;
+  Statement_node statement_node;
+  token_type token;
+  char *iden_name;
+  expression_t *expression;
+  String string;
+  // TODO: this field is not correct, fix this asap expression_type value;
+  statement_t **statements;
+  int statements_length;
+  int statements_capacity;
+} block_statement_t;
 
 typedef struct expression_statement_t {
   node_type type;
@@ -96,6 +121,9 @@ typedef struct expression_statement_t {
   char *iden_name;
   expression_t *expression;
   String string;
+  statement_t **statements;
+  int statements_length;
+  int statements_capacity;
 } expression_statement_t;
 
 typedef struct integer_literal_expression_t {
@@ -110,6 +138,9 @@ typedef struct integer_literal_expression_t {
   char *op;
   expression_t *left;
   bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
 } integer_literal_expression_t;
 
 typedef struct boolean_literal_expression_t {
@@ -124,6 +155,9 @@ typedef struct boolean_literal_expression_t {
   char *op;
   expression_t *left;
   bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
 } boolean_literal_expression_t;
 
 typedef struct prefix_expression_t {
@@ -138,6 +172,9 @@ typedef struct prefix_expression_t {
   char *op;
   expression_t *left;
   bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
 } prefix_expression_t;
 
 typedef struct infix_expression_t {
@@ -152,7 +189,27 @@ typedef struct infix_expression_t {
   char *op;
   expression_t *left;
   bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
 } infix_expression_t;
+
+typedef struct if_expression_t {
+  node_type type;
+  token_type token;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+  String string;
+  int int_value;
+  expression_t *right;
+  char *op;
+  expression_t *left;
+  bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
+} if_expression_t;
 
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();
@@ -162,6 +219,7 @@ expression_t *parse_integer_literal();
 expression_t *parse_prefix_expression();
 expression_t *parse_boolean_expression();
 expression_t *parse_grouped_expression();
+expression_t *parse_if_expression();
 
 expression_t *parse_infix_function();
 
@@ -188,7 +246,7 @@ static prefix_parse_function prefix_parse_functions[] = {
     NULL,
     parse_boolean_expression,
     parse_boolean_expression,
-    NULL,
+    parse_if_expression,
     NULL,
 };
 
