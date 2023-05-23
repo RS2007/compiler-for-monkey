@@ -209,14 +209,44 @@ int test_parsing_prefix_literal(void)
     return 0;
 }
 
+typedef struct infix_test_t {
+    char* input;
+    int left_value;
+    char* op;
+    int right_value;
+} infix_test_t;
+
+void test_infix_expression(infix_test_t* curr_test_pointer, int i)
+{
+    infix_test_t curr_test = *curr_test_pointer;
+    lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+
+    if (program_node->statements_size != 1) {
+        fprintf(
+            stderr,
+            "Error: expected %d statements, got %d statements at test case %d",
+            STATEMENTS_NUMBER, program_node->statements_size, i + 1);
+        exit(-1);
+    }
+    if (program_node->statements[0]->expression->left->int_value != curr_test.left_value) {
+        fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
+            program_node->statements[0]->expression->left->int_value,
+            curr_test.left_value, i + 1);
+        exit(-1);
+    }
+
+    if (program_node->statements[0]->expression->right->int_value != curr_test.right_value) {
+        fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
+            program_node->statements[0]->expression->right->int_value,
+            curr_test.right_value, i + 1);
+        exit(-1);
+    }
+}
+
 int test_infix_expressions(void)
 {
-    typedef struct infix_test_t {
-        char* input;
-        int left_value;
-        char* op;
-        int right_value;
-    } infix_test_t;
     infix_test_t tests[] = {
         { "5 + 5;", 5, "+", 5 },
         { "5 - 5;", 5, "-", 5 },
@@ -230,31 +260,7 @@ int test_infix_expressions(void)
     int tests_size = sizeof(tests) / sizeof(tests[0]);
     int i;
     for (i = 0; i < tests_size; ++i) {
-        infix_test_t curr_test = tests[i];
-        lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
-        parser_t* parser = new_parser(lexer);
-        program_t* program_node = parse_program(parser);
-
-        if (program_node->statements_size != 1) {
-            fprintf(
-                stderr,
-                "Error: expected %d statements, got %d statements at test case %d",
-                STATEMENTS_NUMBER, program_node->statements_size, i + 1);
-            return -1;
-        }
-        if (program_node->statements[0]->expression->left->int_value != curr_test.left_value) {
-            fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
-                program_node->statements[0]->expression->left->int_value,
-                curr_test.left_value, i + 1);
-            return -1;
-        }
-
-        if (program_node->statements[0]->expression->right->int_value != curr_test.right_value) {
-            fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
-                program_node->statements[0]->expression->right->int_value,
-                curr_test.right_value, i + 1);
-            return -1;
-        }
+        test_infix_expression(tests + i, i);
     }
     fprintf(stdout, "All test cases passed ✅");
     return 0;
@@ -505,9 +511,59 @@ int test_if_else_expression(void)
     return 0;
 }
 
+int test_function_literal_parsing(void)
+{
+    char* input = "fn(x,y) { x + y; }";
+    lexer_t* lexer = new_lexer(input, strlen(input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+
+    if (program_node->statements_size != 1) {
+        fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_size);
+        exit(-1);
+    }
+
+    function_expression_t* function_expression = (function_expression_t*)program_node->statements[0]->expression;
+    if (function_expression->parameters_length != 2) {
+        fprintf(stderr, "Expected %d parameters,got %d", 2, function_expression->parameters_length);
+        exit(-1);
+    }
+
+    if (strcmp(function_expression->parameters[0]->string((void*)function_expression->parameters[0]), "x") != 0) {
+        fprintf(stderr, "Expected value %s,got %s", "x", function_expression->parameters[0]->string((void*)function_expression->parameters[0]));
+        exit(-1);
+    }
+
+    if (strcmp(function_expression->parameters[1]->string((void*)function_expression->parameters[1]), "y") != 0) {
+        fprintf(stderr, "Expected value %s,got %s", "y", function_expression->parameters[1]->string((void*)function_expression->parameters[1]));
+        exit(-1);
+    }
+
+    if (function_expression->body->statements_length != 1) {
+        fprintf(stderr, "Expected %d statements in body, got %d", 1, function_expression->body->statements_length);
+        exit(-1);
+    }
+    infix_expression_t* body_statement_expression = (infix_expression_t*)function_expression->body->statements[0]->expression;
+
+    if (strcmp((char*)body_statement_expression->left->value, "x") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "x", (char*)body_statement_expression->left->value);
+        exit(-1);
+    }
+
+    if (strcmp(body_statement_expression->op, "+") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "+", body_statement_expression->op);
+        exit(-1);
+    }
+    if (strcmp((char*)body_statement_expression->right->value, "y") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "y", (char*)body_statement_expression->right->value);
+        exit(-1);
+    }
+
+    fprintf(stdout, "All test cases passed ✅");
+    return 0;
+}
+
 int main(void)
 {
-    test_if_expression();
-    test_if_else_expression();
-    return 0;
+    return test_function_literal_parsing();
 }

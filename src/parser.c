@@ -82,7 +82,7 @@ char* print_prefix_expression_string(void* expression_statement_cast_to_void)
 
 char* print_block_statement(void* block_statement_cast_to_void)
 {
-    block_statement_t* block_statement = (block_statement_t*)malloc(sizeof(block_statement_t));
+    block_statement_t* block_statement = (block_statement_t*)block_statement_cast_to_void;
     char* block_statement_string = (char*)malloc(STRING_MAX_SIZE);
     block_statement_string[0] = '\0';
     for (int i = 0; i < block_statement->statements_length; ++i) {
@@ -93,6 +93,23 @@ char* print_block_statement(void* block_statement_cast_to_void)
     }
     strcat(block_statement_string, "\0");
     return block_statement_string;
+}
+
+
+char* get_concated_arguments_string(expression_t** parameters,int parameters_length){
+  return "hello";
+}
+
+char* get_body_string_function(function_expression_t* function_expression){
+  return "world!";
+}
+
+
+char* print_function_string(void* function_expression_cast_to_void){
+  function_expression_t* function_expression = (function_expression_t*)function_expression_cast_to_void;
+  char* function_expression_string = (char*)malloc(STRING_MAX_SIZE);
+  sprintf(function_expression_string,"%s(%s)%s","fn",get_concated_arguments_string(function_expression->parameters,function_expression->parameters_length),get_body_string_function(function_expression));
+  return function_expression_string;
 }
 
 precedence_t peek_precedence(parser_t* parser)
@@ -445,7 +462,6 @@ expression_t* parse_if_expression(parser_t* parser)
         fprintf(stderr, "Expected ( got %s", parser->peek_token->literal);
         exit(-1);
     }
-    // FIXME: There is an issue here related to the succession of tokens, check it and write a proper implementation(Priority#1)
     next_token_parser(parser);
     next_token_parser(parser);
     if_expression->condition = parse_expression(parser, LOWEST);
@@ -471,6 +487,60 @@ expression_t* parse_if_expression(parser_t* parser)
     }
     return (expression_t*)if_expression;
 }
+
+
+void push_to_arguments_array(function_expression_t* function_expression,expression_t* expression){
+    if (function_expression->parameters_length + 1 > function_expression->parameters_capacity) {
+        function_expression->parameters = realloc(function_expression->parameters, function_expression->parameters_capacity * 2);
+        printf("Realloced");
+    }
+    function_expression->parameters[function_expression->parameters_length++] = expression;
+}
+
+void parse_function_parameters(parser_t* parser,function_expression_t* function_expression){
+  //creating the expression array
+  function_expression->parameters = (expression_t**)calloc(DEFAULT_DYNAMIC_ARR_SIZE,sizeof(expression_t));
+  function_expression->parameters_length = 0;
+  function_expression->parameters_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
+  // parsing arguments
+  while(!is_curr_token(parser,RPAREN)){
+    if(!is_curr_token(parser,IDENT)){
+      fprintf(stderr,"Expected identifier argument here got %s",token_strings[parser->curr_token->type]);
+      exit(-1);
+    }
+    expression_t* curr_identifier = parse_identifier(parser);
+    push_to_arguments_array(function_expression,curr_identifier);
+    if(is_peek_token(parser,RPAREN)){
+      next_token_parser(parser);
+      break;
+    }
+    if(!(is_peek_token(parser,COMMA))){
+      fprintf(stderr,"Expected comma here, got %s",token_strings[parser->peek_token->type]);
+    }
+    next_token_parser(parser);
+    next_token_parser(parser);
+  }
+}
+
+expression_t* parse_function_expression(parser_t* parser){
+  function_expression_t* function_expression = malloc(sizeof(function_expression_t));
+  if(!is_peek_token(parser,LPAREN)){
+    fprintf(stderr,"Expected ( got %s",token_strings[parser->peek_token->type]);
+    exit(-1);
+  }
+  next_token_parser(parser);
+  next_token_parser(parser);
+  parse_function_parameters(parser,function_expression);
+  if(!is_peek_token(parser,LBRACE)){
+    fprintf(stderr,"Expected { got %s",token_strings[parser->peek_token->type]);
+    exit(-1);
+  }
+  next_token_parser(parser);
+  next_token_parser(parser);
+  function_expression->body = (block_statement_t*)parse_block_statement(parser);
+  return (expression_t*)function_expression;
+}
+
 
 expression_t* parse_prefix_expression(parser_t* parser)
 {
