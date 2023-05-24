@@ -23,6 +23,7 @@ typedef enum statement_type {
 
 typedef enum expression_type {
   INTEGER_LITERAL,
+  IDENTIFIER,
   BOOLEAN_LITERAL,
   PREFIX_EXPRESSION,
   INFIX_EXPRESSION,
@@ -69,11 +70,6 @@ typedef struct integer_t {
   long long value; // CHECK: not sure about the type here
 } integer_t;
 
-typedef struct string_t {
-  expression_t expression;
-  token_t *token;
-  char *value;
-} string_t;
 
 typedef struct prefix_expression_t {
   expression_t expression;
@@ -106,7 +102,7 @@ typedef struct ret_statement_t {
 typedef struct expression_statement_t {
   statement_t statement;
   token_t *token;
-  expression_t* expression;
+  expression_t *expression;
 } expression_statement_t;
 
 typedef struct block_statement_t {
@@ -119,7 +115,7 @@ typedef struct block_statement_t {
 
 typedef struct boolean_expression_t {
   expression_t expression;
-  token_t* token;
+  token_t *token;
   bool value;
 } boolean_expression_t;
 
@@ -136,16 +132,17 @@ typedef struct function_literal_t {
   token_t *token;
   expression_t *function;
   expression_t **arguments;
-  size_t arguments_size;
+  size_t arguments_length;
   size_t arguments_capacity;
+  block_statement_t* body;
 } function_literal_t;
 
 typedef struct call_expression_t {
   expression_t expression;
-  token_t* token;
-  expression_t *funciton;
+  token_t *token;
+  expression_t *function;
   expression_t **arguments;
-  size_t arguments_size;
+  size_t arguments_length;
   size_t arguments_capacity;
 } call_expression_t;
 

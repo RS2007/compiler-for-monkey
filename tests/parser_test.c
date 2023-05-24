@@ -8,15 +8,15 @@
 
 bool test_let_statement(statement_t* ast_statement, char* name)
 {
-    char* token_literal = ast_statement->token_literal((void*)ast_statement);
+    char* token_literal = ast_statement->node.token_literal((void*)ast_statement);
     if (strcmp(token_literal, "LET") != 0) {
         fprintf(stderr, "Expected: let statement, Got: %s", token_literal);
         return false;
     }
     let_statement_t* let_statement = (let_statement_t*)ast_statement;
-    if (strcmp(name, let_statement->iden_name) != 0) {
+    if (strcmp(name, let_statement->name->value) != 0) {
         fprintf(stderr, "Expected: name of literal: %s, got %s", name,
-            let_statement->iden_name);
+            let_statement->name->value);
         return false;
     }
     return true;
@@ -37,9 +37,9 @@ int test_let_statements(void)
         }
         exit(-1);
     }
-    if (program_node->statements_size != STATEMENTS_NUMBER) {
-        fprintf(stderr, "Error: expected %d statements, got %d statements",
-            STATEMENTS_NUMBER, program_node->statements_size);
+    if (program_node->statements_length != STATEMENTS_NUMBER) {
+        fprintf(stderr, "Error: expected %d statements, got %zu statements",
+            STATEMENTS_NUMBER, program_node->statements_length);
         return 69;
     }
     char* expectedIdentifiers[] = { "x", "y", "foobar" };
@@ -71,15 +71,15 @@ int test_ret_statements(void)
         }
         exit(-1);
     }
-    if (program_node->statements_size != STATEMENTS_NUMBER) {
-        fprintf(stderr, "Error: expected %d statements, got %d statements",
-            STATEMENTS_NUMBER, program_node->statements_size);
+    if (program_node->statements_length != STATEMENTS_NUMBER) {
+        fprintf(stderr, "Error: expected %d statements, got %zu statements",
+            STATEMENTS_NUMBER, program_node->statements_length);
         return 69;
     }
     int i;
     for (i = 0; i < STATEMENTS_NUMBER; ++i) {
         statement_t* stmt = program_node->statements[i];
-        if (strcmp(stmt->token_literal((void*)stmt), "RETURN") != 0) {
+        if (strcmp(stmt->node.token_literal((void*)stmt), "RETURN") != 0) {
             fprintf(stderr, "Token literal not RETURN");
             return 69;
         }
@@ -96,7 +96,7 @@ int test_string_method_on_statements(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
-    printf("%s", program_node->string((void*)program_node));
+    printf("%s", program_node->node.string((void*)program_node));
     return 0;
 }
 
@@ -106,24 +106,24 @@ int test_parsing_identifiers(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
-    if (program_node->statements_size != 1) {
-        fprintf(stderr, "Expected %d statements , got %d statements", 1,
-            program_node->statements_size);
+    if (program_node->statements_length != 1) {
+        fprintf(stderr, "Expected %d statements , got %zu statements", 1,
+            program_node->statements_length);
         exit(-1);
     }
 
-    if (strcmp(program_node->statements[0]->iden_name, "foobar") != 0) {
+    if (strcmp(((identifier_t*)((expression_statement_t*)program_node->statements[0]))->value, "foobar") != 0) {
         fprintf(stderr, "Expected identifier name is %s, got %s", "foobar",
-            program_node->statements[0]->iden_name);
+            ((identifier_t*)((expression_statement_t*)program_node->statements[0]))->value);
         exit(-1);
     }
 
-    if (strcmp(program_node->statements[0]->token_literal(
+    if (strcmp(program_node->statements[0]->node.token_literal(
                    (void*)program_node->statements[0]),
             "foobar")
         != 0) {
         fprintf(stderr, "Expected identifier name is %s, got %s", "foobar",
-            program_node->statements[0]->token_literal(
+            program_node->statements[0]->node.token_literal(
                 (void*)program_node->statements[0]));
         exit(-1);
     }
@@ -137,23 +137,23 @@ int test_parsing_integer_literal(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
-    if (program_node->statements_size != 1) {
-        fprintf(stderr, "Expected %d statements , got %d statements", 1,
-            program_node->statements_size);
+    if (program_node->statements_length != 1) {
+        fprintf(stderr, "Expected %d statements , got %zu statements", 1,
+            program_node->statements_length);
         exit(-1);
     }
-    if (strcmp(program_node->statements[0]->token_literal(
+    if (strcmp(program_node->statements[0]->node.token_literal(
                    (void*)program_node->statements[0]),
             "5")
         != 0) {
         fprintf(stderr, "Expected identifier name is %s, got %s", "5",
-            program_node->statements[0]->token_literal(
+            program_node->statements[0]->node.token_literal(
                 (void*)program_node->statements[0]));
         exit(-1);
     }
-    if (program_node->statements[0]->expression->int_value != 5) {
-        fprintf(stderr, "Expected integer value is %d got %d", 5,
-            program_node->statements[0]->expression->int_value);
+    if (((integer_t*)(((expression_statement_t*)(program_node->statements[0]))->expression))->value != 5) {
+        fprintf(stderr, "Expected integer value is %d got %lld", 5,
+           ((integer_t*)(((expression_statement_t*)(program_node->statements[0]))->expression))->value);
         exit(-1);
     }
 
@@ -186,22 +186,24 @@ int test_parsing_prefix_literal(void)
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
 
-        if (program_node->statements_size != 1) {
-            fprintf(stderr, "Expected %d statements , got %d statements", 1,
-                program_node->statements_size);
+        if (program_node->statements_length != 1) {
+            fprintf(stderr, "Expected %d statements , got %zu statements", 1,
+                program_node->statements_length);
             exit(-1);
         }
-        statement_t* test_node = program_node->statements[0];
+        expression_statement_t* test_node = (expression_statement_t*)program_node->statements[0];
+        prefix_expression_t* prefix_expression = (prefix_expression_t*)test_node->expression;
 
-        if (strcmp(test_node->expression->op, curr_test.operator) != 0) {
-            fprintf(stderr, "Expected %s operand , got %s", test_node->expression->op,
+        if (strcmp(prefix_expression->op, curr_test.operator) != 0) {
+            fprintf(stderr, "Expected %s operand , got %s", prefix_expression->op,
                 curr_test.operator);
             exit(-1);
         }
         // check for literal
-        if (test_node->expression->right->int_value != curr_test.integer_value) {
-            fprintf(stderr, "Expected %d operand , got %d",
-                test_node->expression->right->int_value, curr_test.integer_value);
+        integer_t* integer_right = (integer_t*)(prefix_expression->right);
+        if (integer_right->value != curr_test.integer_value) {
+            fprintf(stderr, "Expected %lld operand , got %d",
+                integer_right->value, curr_test.integer_value);
             exit(-1);
         }
     }
@@ -223,23 +225,27 @@ void test_infix_expression(infix_test_t* curr_test_pointer, int i)
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
 
-    if (program_node->statements_size != 1) {
+    if (program_node->statements_length != 1) {
         fprintf(
             stderr,
-            "Error: expected %d statements, got %d statements at test case %d",
-            STATEMENTS_NUMBER, program_node->statements_size, i + 1);
+            "Error: expected %d statements, got %zu statements at test case %d",
+            STATEMENTS_NUMBER, program_node->statements_length, i + 1);
         exit(-1);
     }
-    if (program_node->statements[0]->expression->left->int_value != curr_test.left_value) {
-        fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
-            program_node->statements[0]->expression->left->int_value,
+    expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0]; 
+    infix_expression_t* infix_expr = (infix_expression_t*)stmt->expression;
+    integer_t* integer_left = (integer_t*)infix_expr->left;
+    integer_t* integer_right = (integer_t*)infix_expr->right;
+    if (integer_left->value != curr_test.left_value) {
+        fprintf(stderr, "Error: expected %lld value, got %d value at test case %d",
+            integer_left->value,
             curr_test.left_value, i + 1);
         exit(-1);
     }
 
-    if (program_node->statements[0]->expression->right->int_value != curr_test.right_value) {
-        fprintf(stderr, "Error: expected %d value, got %d value at test case %d",
-            program_node->statements[0]->expression->right->int_value,
+    if (integer_right->value != curr_test.right_value) {
+        fprintf(stderr, "Error: expected %lld value, got %d value at test case %d",
+            integer_right->value,
             curr_test.right_value, i + 1);
         exit(-1);
     }
@@ -293,7 +299,7 @@ int test_operator_precedence()
         lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        char* program_string = program_node->string((void*)program_node);
+        char* program_string = program_node->node.string((void*)program_node);
         if (strcmp(curr_test.expected, program_string) != 0) {
             fprintf(stderr, "Failure at expression: %s", curr_test.input);
             fprintf(stderr, "Expected %s,Got %s", curr_test.expected, program_string);
@@ -341,14 +347,16 @@ int boolean_parse_test(void)
         lexer_t* lexer = new_lexer(curr_test, strlen(curr_test));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        if (program_node->statements_size != 1) {
-            fprintf(stderr, "Statements size expected to be 1, got %d", program_node->statements_size);
+        if (program_node->statements_length != 1) {
+            fprintf(stderr, "Statements size expected to be 1, got %zu", program_node->statements_length);
             exit(-1);
         }
-        if (program_node->statements[0]->expression->boolean_value != expected_values[i]) {
+        expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+        boolean_expression_t* boolean_expression = (boolean_expression_t*)stmt->expression;
+        if (boolean_expression->value != expected_values[i]) {
             fprintf(stdout, "Error for input %s", tests[i]);
-            fprintf(stdout, "Boolean value expected: %d,%d\n", expected_values[i], program_node->statements[0]->expression->boolean_value);
-            fprintf(stderr, "Statements value expected to be %d, got %d\n", program_node->statements[0]->expression->boolean_value, expected_values[i]);
+            fprintf(stdout, "Boolean value expected: %d,%d\n", expected_values[i], boolean_expression->value);
+            fprintf(stderr, "Statements value expected to be %d, got %d\n", boolean_expression->value, expected_values[i]);
             exit(-1);
         }
     }
@@ -357,11 +365,11 @@ int boolean_parse_test(void)
         lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        if (program_node->statements_size != 1) {
-            fprintf(stderr, "Statements size expected to be 1, got %d", program_node->statements_size);
+        if (program_node->statements_length != 1) {
+            fprintf(stderr, "Statements size expected to be 1, got %zu", program_node->statements_length);
             exit(-1);
         }
-        char* program_string = program_node->string((void*)program_node);
+        char* program_string = program_node->node.string((void*)program_node);
         if (strcmp(program_string, curr_test.expected) != 0) {
             fprintf(stderr, "Expected %s, got %s", program_string, curr_test.expected);
             exit(-1);
@@ -372,16 +380,21 @@ int boolean_parse_test(void)
         lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        if (strcmp(program_node->statements[0]->expression->op, curr_test.op) != 0) {
-            fprintf(stderr, "Expected %s,got %s", program_node->statements[0]->expression->op, curr_test.op);
+        expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+        infix_expression_t* infix_expr = (infix_expression_t*)stmt->expression;
+        boolean_expression_t* boolean_left = (boolean_expression_t*)infix_expr->left;
+        boolean_expression_t* boolean_right = (boolean_expression_t*)infix_expr->right;
+        
+        if (strcmp(infix_expr->op, curr_test.op) != 0) {
+            fprintf(stderr, "Expected %s,got %s", infix_expr->op, curr_test.op);
             exit(-1);
         }
-        if (program_node->statements[0]->expression->left->boolean_value != curr_test.left) {
-            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->left->boolean_value, curr_test.left);
+        if (boolean_left->value != curr_test.left) {
+            fprintf(stderr, "Expected %d,got %d", boolean_left->value, curr_test.left);
             exit(-1);
         }
-        if (program_node->statements[0]->expression->right->boolean_value != curr_test.right) {
-            fprintf(stderr, "Expected %d,got %d", program_node->statements[0]->expression->right->boolean_value, curr_test.right);
+        if (boolean_right->value != curr_test.right) {
+            fprintf(stderr, "Expected %d,got %d", boolean_right->value, curr_test.right);
             exit(-1);
         }
     }
@@ -390,12 +403,15 @@ int boolean_parse_test(void)
         lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        if (strcmp(program_node->statements[0]->expression->op, curr_test.op) != 0) {
-            fprintf(stderr, "Expected %s, got %s", program_node->statements[0]->expression->op, curr_test.op);
+        expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+        prefix_expression_t* prefix_expr = (prefix_expression_t*)stmt->expression;
+        boolean_expression_t* boolean_right = (boolean_expression_t*)prefix_expr->right;
+        if (strcmp(prefix_expr->op, curr_test.op) != 0) {
+            fprintf(stderr, "Expected %s, got %s",prefix_expr->op, curr_test.op);
             exit(-1);
         }
-        if (program_node->statements[0]->expression->right->boolean_value != curr_test.value) {
-            fprintf(stderr, "Expected %d, got %d", program_node->statements[0]->expression->right->boolean_value, curr_test.value);
+        if (boolean_right->value != curr_test.value) {
+            fprintf(stderr, "Expected %d, got %d",boolean_right->value, curr_test.value);
             exit(-1);
         }
     }
@@ -421,7 +437,7 @@ int test_grouped_expressions(void)
         lexer_t* lexer = new_lexer(curr_test.input, strlen(curr_test.input));
         parser_t* parser = new_parser(lexer);
         program_t* program_node = parse_program(parser);
-        char* program_string = program_node->string((void*)program_node);
+        char* program_string = program_node->node.string((void*)program_node);
         if (strcmp(program_string, curr_test.expected) != 0) {
             fprintf(stderr, "Expected %s, Got %s", program_string, curr_test.expected);
             exit(-1);
@@ -437,8 +453,8 @@ int test_if_expression(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* paresr = new_parser(lexer);
     program_t* program_node = parse_program(paresr);
-    if (program_node->statements_size != 1) {
-        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_size, 1);
+    if (program_node->statements_length != 1) {
+        fprintf(stderr, "Expected %zu elements, got %d elements", program_node->statements_length, 1);
         exit(-1);
     }
     expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
@@ -477,8 +493,8 @@ int test_if_else_expression(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* paresr = new_parser(lexer);
     program_t* program_node = parse_program(paresr);
-    if (program_node->statements_size != 1) {
-        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_size, 1);
+    if (program_node->statements_length != 1) {
+        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_length, 1);
         exit(-1);
     }
     expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
@@ -518,8 +534,8 @@ int test_function_literal_parsing(void)
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
 
-    if (program_node->statements_size != 1) {
-        fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_size);
+    if (program_node->statements_length != 1) {
+        fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_length);
         exit(-1);
     }
 
@@ -568,8 +584,8 @@ int test_call_expressions(void){
   lexer_t* lexer = new_lexer(input,strlen(input));
   parser_t* parser = new_parser(lexer);
   program_t* program_node = parse_program(parser);
-  if (program_node->statements_size != 1) {
-      fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_size);
+  if (program_node->statements_length != 1) {
+      fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_length);
       exit(-1);
   }
 
