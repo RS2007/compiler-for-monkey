@@ -373,6 +373,7 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
     return integer_literal_string;
 }
 
+
 char* get_if_expression_string(void* if_expression_cast_to_void)
 {
     if_expression_t* if_expression = malloc(sizeof(if_expression_t));
@@ -393,6 +394,13 @@ char* get_boolean_expression_string(void* boolean_expression_cast_to_void)
     char* boolean_string = (char*)malloc(STRING_MAX_SIZE);
     sprintf(boolean_string, "%s", boolean_expression->boolean_value ? "true" : "false");
     return boolean_string;
+}
+
+char* get_call_expressibon_string(void* call_expression_cast_to_void){
+  call_expression_t* call_expression = (call_expression_t*)call_expression_cast_to_void;
+  char* call_string = (char*)malloc(STRING_MAX_SIZE);
+  sprintf(call_string,"%s(%s)",call_expression->function->string((void*)call_expression->function),get_concated_arguments_string(call_expression->arguments, call_expression->arguments_length));
+  return call_string;
 }
 
 expression_t* parse_boolean_expression(parser_t* parser)

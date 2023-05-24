@@ -145,6 +145,10 @@ typedef struct integer_literal_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } integer_literal_expression_t;
 
 typedef struct boolean_literal_expression_t {
@@ -166,6 +170,10 @@ typedef struct boolean_literal_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } boolean_literal_expression_t;
 
 typedef struct prefix_expression_t {
@@ -187,6 +195,10 @@ typedef struct prefix_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } prefix_expression_t;
 
 typedef struct infix_expression_t {
@@ -208,6 +220,10 @@ typedef struct infix_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } infix_expression_t;
 
 typedef struct if_expression_t {
@@ -229,6 +245,10 @@ typedef struct if_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } if_expression_t;
 
 typedef struct function_expression_t {
@@ -250,7 +270,36 @@ typedef struct function_expression_t {
   int parameters_length;
   int parameters_capacity;
   block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
 } function_expression_t;
+
+typedef struct call_expression_t {
+  node_type type;
+  token_type token;
+  Token_literal token_literal;
+  Value value;
+  Expression_node expression_node;
+  String string;
+  int int_value;
+  expression_t *right;
+  char *op;
+  expression_t *left;
+  bool boolean_value;
+  expression_t *condition;
+  block_statement_t *consequence;
+  block_statement_t *alternative;
+  expression_t **parameters;
+  int parameters_length;
+  int parameters_capacity;
+  block_statement_t *body;
+  expression_t* function;
+  expression_t** arguments;
+  int arguments_length;
+  int arguments_capacity;
+} call_expression_t;
 
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();

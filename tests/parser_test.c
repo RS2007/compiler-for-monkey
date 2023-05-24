@@ -563,7 +563,61 @@ int test_function_literal_parsing(void)
     return 0;
 }
 
-int main(void)
-{
-    return test_function_literal_parsing();
+int test_call_expressions(void){
+  char* input = "add(1,2*3,4+5)";
+  lexer_t* lexer = new_lexer(input,strlen(input));
+  parser_t* parser = new_parser(lexer);
+  program_t* program_node = parse_program(parser);
+  if (program_node->statements_size != 1) {
+      fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_size);
+      exit(-1);
+  }
+
+  call_expression_t* call_expression = (call_expression_t*)program_node->statements[0]->expression;
+  if(strcmp(call_expression->function->string((void*)call_expression->function),"add") != 0){
+    fprintf(stderr,"Expected %s , got %s","add",call_expression->function->string((void*)call_expression->function));
+    exit(-1);
+  }
+  if(call_expression->arguments_length != 3){
+    fprintf(stderr,"Expected 3 arguments,got %d",call_expression->arguments_length);
+    exit(-1);
+  }
+  integer_literal_expression_t* first_argument = (integer_literal_expression_t*)call_expression->arguments[0];
+  if(first_argument->int_value != 1){
+    fprintf(stderr,"Expected first argument as 1,got %d",first_argument->int_value);
+    exit(-1);
+  }
+  infix_expression_t* second_argument = (infix_expression_t*)call_expression->arguments[1];
+  infix_expression_t* third_argument = (infix_expression_t*)call_expression->arguments[2];
+  if(second_argument->left->int_value == 2){
+    fprintf(stderr,"Expected %d, got %d",2,second_argument->left->int_value);
+    exit(-1);
+  }
+  if(strcmp(second_argument->op,"*") != 0){
+    fprintf(stderr,"Expected %s, got %s","*",second_argument->op);
+    exit(-1);
+  }
+  if(second_argument->right->int_value == 3){
+
+    fprintf(stderr,"Expected %d, got %d",3,second_argument->right->int_value);
+    exit(-1);
+  }
+
+  if(third_argument->left->int_value == 4){
+    fprintf(stderr,"Expected %d, got %d",4,third_argument->left->int_value);
+    exit(-1);
+  }
+  if(strcmp(third_argument->op,"+") != 0){
+    fprintf(stderr,"Expected %s, got %s","+",third_argument->op);
+    exit(-1);
+  }
+  if(third_argument->right->int_value == 5){
+    fprintf(stderr,"Expected %d, got %d",5,third_argument->right->int_value);
+    exit(-1);
+  }
+
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
 }
+
+int main(void) { return test_call_expressions(); }
