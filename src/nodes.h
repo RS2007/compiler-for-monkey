@@ -1,9 +1,9 @@
 #pragma once
 
 #include "token.h"
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef enum node_type {
   PROGRAM,

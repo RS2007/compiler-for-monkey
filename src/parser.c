@@ -58,17 +58,14 @@ char* print_expression_statement_string(void* expression_statement_cast_to_void)
         (void*)expression_statement->expression);
 }
 
-char* print_infix_expression_string(void* expression_statement_cast_to_void)
+char* print_infix_expression_string(void* expression_cast_to_void)
 {
-    expression_statement_t* expression_statement = (expression_statement_t*)expression_statement_cast_to_void;
-    infix_expression_t* infix_expression = (infix_expression_t*)expression_statement->expression;
+    infix_expression_t* infix_expression = (infix_expression_t*)expression_cast_to_void;
     char* infix_expression_string = (char*)malloc(STRING_MAX_SIZE);
     sprintf(infix_expression_string, "(%s %s %s)",
-        infix_expression->left->node.string(
-            (void*)infix_expression->left),
+        infix_expression->left->node.string((void*)infix_expression->left),
         infix_expression->op,
-        infix_expression->right->node.string(
-            (void*)infix_expression->right));
+        infix_expression->right->node.string((void*)infix_expression->right));
     return infix_expression_string;
 }
 
@@ -98,21 +95,22 @@ char* print_block_statement(void* block_statement_cast_to_void)
     return block_statement_string;
 }
 
-
-char* get_concated_arguments_string(expression_t** parameters,int parameters_length){
-  return "hello";
+char* get_concated_arguments_string(expression_t** parameters, int parameters_length)
+{
+    return "hello";
 }
 
-char* get_body_string_function(function_literal_t* function_expression){
-  return "world!";
+char* get_body_string_function(function_literal_t* function_expression)
+{
+    return "world!";
 }
 
-
-char* print_function_string(void* function_expression_cast_to_void){
-  function_literal_t* function_expression = (function_literal_t*)function_expression_cast_to_void;
-  char* function_expression_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(function_expression_string,"%s(%s)%s","fn",get_concated_arguments_string(function_expression->arguments,function_expression->arguments_length),get_body_string_function(function_expression));
-  return function_expression_string;
+char* print_function_string(void* function_expression_cast_to_void)
+{
+    function_literal_t* function_expression = (function_literal_t*)function_expression_cast_to_void;
+    char* function_expression_string = (char*)malloc(STRING_MAX_SIZE);
+    sprintf(function_expression_string, "%s(%s)%s", "fn", get_concated_arguments_string(function_expression->arguments, function_expression->arguments_length), get_body_string_function(function_expression));
+    return function_expression_string;
 }
 
 precedence_t peek_precedence(parser_t* parser)
@@ -207,8 +205,18 @@ char* ret_token_literal(void* ret_statement_cast_to_void)
 char* expression_token_literal(void* expression_statement_cast_to_void)
 {
     expression_statement_t* expression_statement = (expression_statement_t*)expression_statement_cast_to_void;
-    identifier_t* identifier_expr = (identifier_t*)expression_statement->expression;
-  return identifier_expr->value;
+    switch (expression_statement->expression->type) {
+    case INTEGER_LITERAL: {
+        char* integer_string = (char*)malloc(STRING_MAX_SIZE);
+        integer_t* integer_node = (integer_t*)expression_statement->expression;
+        sprintf(integer_string, "%lld", integer_node->value);
+        return integer_string;
+    }
+    default: {
+        identifier_t* identifier_expr = (identifier_t*)expression_statement->expression;
+        return identifier_expr->value;
+    }
+    }
 }
 
 void statement_node_let(void* let_statement_cast_to_void)
@@ -275,6 +283,7 @@ statement_t* parse_let_statement(parser_t* parser)
         // program
     }
     // 2. identifier info
+    stmt->name = malloc(sizeof(identifier_t));
     stmt->name->value = parser->curr_token->literal;
     if (!expect_peek_token(parser, ASSIGN)) {
         char* error_string = (char*)malloc(MAX_ERROR_SIZE);
@@ -341,19 +350,6 @@ expression_t* parse_grouped_expression(parser_t* parser)
     return expression;
 }
 
-statement_t* parse_expression_statement(parser_t* parser)
-{
-    expression_statement_t* stmt = (expression_statement_t*)malloc(sizeof(expression_statement_t));
-    // stmt->token = parser->curr_token->type;
-    stmt->expression = parse_expression(parser, LOWEST);
-    stmt->statement.node.token_literal = expression_token_literal;
-    stmt->statement.node.string = print_expression_statement_string;
-    if (is_peek_token(parser, SEMICOLON)) {
-        next_token_parser(parser);
-    }
-    return (statement_t*)stmt;
-}
-
 char* identifier_string(void* identifier_expression_cast_to_void)
 {
     return ((identifier_t*)identifier_expression_cast_to_void)->value;
@@ -363,7 +359,7 @@ expression_t* parse_identifier(parser_t* parser)
 {
     identifier_t* identifier = (identifier_t*)malloc(sizeof(expression_statement_t));
     identifier->expression.type = IDENTIFIER;
-    identifier->value = parser->curr_token->literal;
+    identifier->value = strdup(parser->curr_token->literal);
     identifier->expression.node.string = identifier_string;
     return (expression_t*)identifier;
 }
@@ -377,6 +373,18 @@ char* integer_literal_string(void* integer_expression_cast_to_void)
     return integer_literal_string;
 }
 
+statement_t* parse_expression_statement(parser_t* parser)
+{
+    expression_statement_t* stmt = (expression_statement_t*)malloc(sizeof(expression_statement_t));
+    // stmt->token = parser->curr_token->type;
+    stmt->expression = parse_expression(parser, LOWEST);
+    stmt->statement.node.token_literal = expression_token_literal;
+    stmt->statement.node.string = print_expression_statement_string;
+    if (is_peek_token(parser, SEMICOLON)) {
+        next_token_parser(parser);
+    }
+    return (statement_t*)stmt;
+}
 
 char* get_if_expression_string(void* if_expression_cast_to_void)
 {
@@ -400,17 +408,18 @@ char* get_boolean_expression_string(void* boolean_expression_cast_to_void)
     return boolean_string;
 }
 
-char* get_call_expressibon_string(void* call_expression_cast_to_void){
-  call_expression_t* call_expression = (call_expression_t*)call_expression_cast_to_void;
-  char* call_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(call_string,"%s(%s)",call_expression->function->node.string((void*)call_expression->function),get_concated_arguments_string(call_expression->arguments, call_expression->arguments_length));
-  return call_string;
+char* get_call_expressibon_string(void* call_expression_cast_to_void)
+{
+    call_expression_t* call_expression = (call_expression_t*)call_expression_cast_to_void;
+    char* call_string = (char*)malloc(STRING_MAX_SIZE);
+    sprintf(call_string, "%s(%s)", call_expression->function->node.string((void*)call_expression->function), get_concated_arguments_string(call_expression->arguments, call_expression->arguments_length));
+    return call_string;
 }
 
 expression_t* parse_boolean_expression(parser_t* parser)
 {
-    boolean_expression_t* expression = (boolean_expression_t*)malloc(sizeof(expression_t));
-    expression->token->type = parser->curr_token->type;
+    boolean_expression_t* expression = (boolean_expression_t*)malloc(sizeof(boolean_expression_t));
+    //expression->token->type = parser->curr_token->type;
     bool is_true = strcmp(parser->curr_token->literal, "true") == 0;
     bool is_false = strcmp(parser->curr_token->literal, "false") == 0;
     if (!is_true && !is_false) {
@@ -424,11 +433,11 @@ expression_t* parse_boolean_expression(parser_t* parser)
 
 expression_t* parse_integer_literal(parser_t* parser)
 {
-    integer_t* expression = (integer_t*)malloc(sizeof(expression_statement_t));
-    expression->token->type = parser->curr_token->type;
-    expression->value = atoi(parser->curr_token->literal);
-    expression->expression.node.string = integer_literal_string;
-    return (expression_t*)expression;
+    integer_t* integer_expression = malloc(sizeof(integer_t));
+    integer_expression->expression.type = INTEGER_LITERAL;
+    integer_expression->value = atoi(parser->curr_token->literal);
+    integer_expression->expression.node.string = integer_literal_string;
+    return (expression_t*)integer_expression;
 }
 
 statement_t* parse_statement(parser_t* parser)
@@ -500,8 +509,8 @@ expression_t* parse_if_expression(parser_t* parser)
     return (expression_t*)if_expression;
 }
 
-
-void push_to_arguments_array(function_literal_t* function_expression,expression_t* expression){
+void push_to_arguments_array(function_literal_t* function_expression, expression_t* expression)
+{
     if (function_expression->arguments_length + 1 > function_expression->arguments_capacity) {
         function_expression->arguments = realloc(function_expression->arguments, function_expression->arguments_capacity * 2);
         printf("Realloced");
@@ -509,50 +518,51 @@ void push_to_arguments_array(function_literal_t* function_expression,expression_
     function_expression->arguments[function_expression->arguments_length++] = expression;
 }
 
-void parse_function_parameters(parser_t* parser,function_literal_t* function_expression){
-  //creating the expression array
-  function_expression->arguments = (expression_t**)calloc(DEFAULT_DYNAMIC_ARR_SIZE,sizeof(expression_t));
-  function_expression->arguments_length = 0;
-  function_expression->arguments_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
-  // parsing arguments
-  while(!is_curr_token(parser,RPAREN)){
-    if(!is_curr_token(parser,IDENT)){
-      fprintf(stderr,"Expected identifier argument here got %s",token_strings[parser->curr_token->type]);
-      exit(-1);
+void parse_function_parameters(parser_t* parser, function_literal_t* function_expression)
+{
+    //creating the expression array
+    function_expression->arguments = (expression_t**)calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(expression_t));
+    function_expression->arguments_length = 0;
+    function_expression->arguments_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
+    // parsing arguments
+    while (!is_curr_token(parser, RPAREN)) {
+        if (!is_curr_token(parser, IDENT)) {
+            fprintf(stderr, "Expected identifier argument here got %s", token_strings[parser->curr_token->type]);
+            exit(-1);
+        }
+        expression_t* curr_identifier = parse_identifier(parser);
+        push_to_arguments_array(function_expression, curr_identifier);
+        if (is_peek_token(parser, RPAREN)) {
+            next_token_parser(parser);
+            break;
+        }
+        if (!(is_peek_token(parser, COMMA))) {
+            fprintf(stderr, "Expected comma here, got %s", token_strings[parser->peek_token->type]);
+        }
+        next_token_parser(parser);
+        next_token_parser(parser);
     }
-    expression_t* curr_identifier = parse_identifier(parser);
-    push_to_arguments_array(function_expression,curr_identifier);
-    if(is_peek_token(parser,RPAREN)){
-      next_token_parser(parser);
-      break;
-    }
-    if(!(is_peek_token(parser,COMMA))){
-      fprintf(stderr,"Expected comma here, got %s",token_strings[parser->peek_token->type]);
+}
+
+expression_t* parse_function_expression(parser_t* parser)
+{
+    function_literal_t* function_expression = malloc(sizeof(function_literal_t));
+    if (!is_peek_token(parser, LPAREN)) {
+        fprintf(stderr, "Expected ( got %s", token_strings[parser->peek_token->type]);
+        exit(-1);
     }
     next_token_parser(parser);
     next_token_parser(parser);
-  }
+    parse_function_parameters(parser, function_expression);
+    if (!is_peek_token(parser, LBRACE)) {
+        fprintf(stderr, "Expected { got %s", token_strings[parser->peek_token->type]);
+        exit(-1);
+    }
+    next_token_parser(parser);
+    next_token_parser(parser);
+    function_expression->body = (block_statement_t*)parse_block_statement(parser);
+    return (expression_t*)function_expression;
 }
-
-expression_t* parse_function_expression(parser_t* parser){
-  function_literal_t* function_expression = malloc(sizeof(function_literal_t));
-  if(!is_peek_token(parser,LPAREN)){
-    fprintf(stderr,"Expected ( got %s",token_strings[parser->peek_token->type]);
-    exit(-1);
-  }
-  next_token_parser(parser);
-  next_token_parser(parser);
-  parse_function_parameters(parser,function_expression);
-  if(!is_peek_token(parser,LBRACE)){
-    fprintf(stderr,"Expected { got %s",token_strings[parser->peek_token->type]);
-    exit(-1);
-  }
-  next_token_parser(parser);
-  next_token_parser(parser);
-  function_expression->body = (block_statement_t*)parse_block_statement(parser);
-  return (expression_t*)function_expression;
-}
-
 
 expression_t* parse_prefix_expression(parser_t* parser)
 {
