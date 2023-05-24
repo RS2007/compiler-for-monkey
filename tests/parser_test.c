@@ -459,24 +459,27 @@ int test_if_expression(void)
     }
     expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
     if_expression_t* expr = (if_expression_t*)stmt->expression;
-    if (strcmp(expr->condition->op, "<") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "<", expr->condition->op);
+    infix_expression_t* condition = (infix_expression_t*)expr->condition;
+    if (strcmp(condition->op, "<") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "<",condition->op);
         exit(-1);
     }
-    if (strcmp((char*)expr->condition->left->value, "x") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->condition->left->value);
+    if (strcmp(((identifier_t*)condition->left)->value, "x") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "x", ((identifier_t*)condition->left)->value);
         exit(-1);
     }
-    if (strcmp((char*)expr->condition->right->value, "y") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "y", (char*)expr->condition->right->value);
+    if (strcmp(((identifier_t*)condition->right)->value, "y") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "y", ((identifier_t*)condition->right)->value);
         exit(-1);
     }
     if (expr->consequence->statements_length != 1) {
-        fprintf(stderr, "Expected %d,got %d", 1, expr->consequence->statements_length);
+        fprintf(stderr, "Expected %d,got %zu", 1, expr->consequence->statements_length);
         exit(-1);
     }
-    if (strcmp((char*)expr->consequence->statements[0]->expression->value, "x")) {
-        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->consequence->expression->value);
+    expression_statement_t* consequence_stmt = (expression_statement_t*)expr->consequence->statements[0];  
+    identifier_t* consequence = (identifier_t*)consequence_stmt->expression;
+    if (strcmp(consequence->value, "x")) {
+        fprintf(stderr, "Expected %s,got %s", "x", consequence->value);
         exit(-1);
     }
     if (expr->alternative != NULL) {
@@ -494,33 +497,43 @@ int test_if_else_expression(void)
     parser_t* paresr = new_parser(lexer);
     program_t* program_node = parse_program(paresr);
     if (program_node->statements_length != 1) {
-        fprintf(stderr, "Expected %d elements, got %d elements", program_node->statements_length, 1);
+        fprintf(stderr, "Expected %zu elements, got %d elements", program_node->statements_length, 1);
         exit(-1);
     }
     expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
     if_expression_t* expr = (if_expression_t*)stmt->expression;
-    if (strcmp(expr->condition->op, "<") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "<", expr->condition->op);
+    infix_expression_t* condition = (infix_expression_t*)expr->condition;
+    identifier_t* left_iden_condition = (identifier_t*)condition->left;
+    identifier_t* right_iden_condition = (identifier_t*)condition->right;
+    block_statement_t* consequence = expr->consequence;
+    block_statement_t* alternative = expr->alternative;
+    expression_statement_t* consequence_expr = (expression_statement_t*)consequence->statements[0];
+    expression_statement_t* alternative_expr = (expression_statement_t*)alternative->statements[0];
+  
+    identifier_t* consequence_iden = (identifier_t*)consequence_expr->expression;
+    identifier_t* alternative_iden = (identifier_t*)alternative_expr->expression;
+    if (strcmp(condition->op, "<") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "<", condition->op);
         exit(-1);
     }
-    if (strcmp((char*)expr->condition->left->value, "x") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->condition->left->value);
+    if (strcmp(left_iden_condition->value, "x") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "x", left_iden_condition->value);
         exit(-1);
     }
-    if (strcmp((char*)expr->condition->right->value, "y") != 0) {
-        fprintf(stderr, "Expected %s,got %s", "y", (char*)expr->condition->right->value);
+    if (strcmp((char*)right_iden_condition->value, "y") != 0) {
+        fprintf(stderr, "Expected %s,got %s", "y", right_iden_condition->value);
         exit(-1);
     }
-    if (expr->consequence->statements_length != 1) {
-        fprintf(stderr, "Expected %d,got %d", 1, expr->consequence->statements_length);
+    if (consequence->statements_length != 1) {
+        fprintf(stderr, "Expected %d,got %zu", 1, consequence->statements_length);
         exit(-1);
     }
-    if (strcmp((char*)expr->consequence->statements[0]->expression->value, "x")) {
-        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->consequence->statements[0]->expression->value);
+    if (strcmp(consequence_iden->value, "x")) {
+        fprintf(stderr, "Expected %s,got %s", "x", consequence_iden->value);
         exit(-1);
     }
-    if (strcmp((char*)expr->alternative->statements[0]->expression->value, "y")) {
-        fprintf(stderr, "Expected %s,got %s", "x", (char*)expr->alternative->statements[0]->expression->value);
+    if (strcmp(alternative_iden->value, "y")) {
+        fprintf(stderr, "Expected %s,got %s", "x", alternative_iden->value);
         exit(-1);
     }
     fprintf(stdout, "All test cases passed ✅");
@@ -535,43 +548,47 @@ int test_function_literal_parsing(void)
     program_t* program_node = parse_program(parser);
 
     if (program_node->statements_length != 1) {
-        fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_length);
+        fprintf(stderr, "Expected statements length to be %d, got %zu", 1, program_node->statements_length);
         exit(-1);
     }
 
-    function_expression_t* function_expression = (function_expression_t*)program_node->statements[0]->expression;
-    if (function_expression->parameters_length != 2) {
-        fprintf(stderr, "Expected %d parameters,got %d", 2, function_expression->parameters_length);
+    expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+    function_literal_t* function_expression = (function_literal_t*)stmt->expression;
+    if (function_expression->arguments_length != 2) {
+        fprintf(stderr, "Expected %d arguments,got %zu", 2, function_expression->arguments_length);
         exit(-1);
     }
 
-    if (strcmp(function_expression->parameters[0]->string((void*)function_expression->parameters[0]), "x") != 0) {
-        fprintf(stderr, "Expected value %s,got %s", "x", function_expression->parameters[0]->string((void*)function_expression->parameters[0]));
+
+    if (strcmp(function_expression->arguments[0]->node.string((void*)function_expression->arguments[0]), "x") != 0) {
+        fprintf(stderr, "Expected value %s,got %s", "x", function_expression->arguments[0]->node.string((void*)function_expression->arguments[0]));
         exit(-1);
     }
 
-    if (strcmp(function_expression->parameters[1]->string((void*)function_expression->parameters[1]), "y") != 0) {
-        fprintf(stderr, "Expected value %s,got %s", "y", function_expression->parameters[1]->string((void*)function_expression->parameters[1]));
+    if (strcmp(function_expression->arguments[1]->node.string((void*)function_expression->arguments[1]), "y") != 0) {
+        fprintf(stderr, "Expected value %s,got %s", "y", function_expression->arguments[1]->node.string((void*)function_expression->arguments[1]));
         exit(-1);
     }
 
     if (function_expression->body->statements_length != 1) {
-        fprintf(stderr, "Expected %d statements in body, got %d", 1, function_expression->body->statements_length);
+        fprintf(stderr, "Expected %d statements in body, got %zu", 1, function_expression->body->statements_length);
         exit(-1);
     }
-    infix_expression_t* body_statement_expression = (infix_expression_t*)function_expression->body->statements[0]->expression;
+    expression_statement_t* body_statement = (expression_statement_t*)function_expression->body->statements[0];
+    infix_expression_t* infix_expr = (infix_expression_t*)body_statement->expression;
+    
 
-    if (strcmp((char*)body_statement_expression->left->value, "x") != 0) {
-        fprintf(stderr, "Expected %s, got %s", "x", (char*)body_statement_expression->left->value);
+    if (strcmp(((identifier_t*)infix_expr->left)->value, "x") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "x", ((identifier_t*)infix_expr->left)->value);
         exit(-1);
     }
 
-    if (strcmp(body_statement_expression->op, "+") != 0) {
-        fprintf(stderr, "Expected %s, got %s", "+", body_statement_expression->op);
+    if (strcmp((infix_expr->op), "+") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "+", infix_expr->op);
         exit(-1);
     }
-    if (strcmp((char*)body_statement_expression->right->value, "y") != 0) {
-        fprintf(stderr, "Expected %s, got %s", "y", (char*)body_statement_expression->right->value);
+    if (strcmp(((identifier_t*)infix_expr->right)->value, "y") != 0) {
+        fprintf(stderr, "Expected %s, got %s", "y", ((identifier_t*)infix_expr->right)->value);
         exit(-1);
     }
 
@@ -585,50 +602,51 @@ int test_call_expressions(void){
   parser_t* parser = new_parser(lexer);
   program_t* program_node = parse_program(parser);
   if (program_node->statements_length != 1) {
-      fprintf(stderr, "Expected statements length to be %d, got %d", 1, program_node->statements_length);
+      fprintf(stderr, "Expected statements length to be %d, got %zu", 1, program_node->statements_length);
       exit(-1);
   }
 
-  call_expression_t* call_expression = (call_expression_t*)program_node->statements[0]->expression;
-  if(strcmp(call_expression->function->string((void*)call_expression->function),"add") != 0){
-    fprintf(stderr,"Expected %s , got %s","add",call_expression->function->string((void*)call_expression->function));
+  expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+  call_expression_t* call_expression = (call_expression_t*)stmt->expression;
+  if(strcmp(call_expression->function->node.string((void*)call_expression->function),"add") != 0){
+    fprintf(stderr,"Expected %s , got %s","add",call_expression->function->node.string((void*)call_expression->function));
     exit(-1);
   }
   if(call_expression->arguments_length != 3){
-    fprintf(stderr,"Expected 3 arguments,got %d",call_expression->arguments_length);
+    fprintf(stderr,"Expected 3 arguments,got %zu",call_expression->arguments_length);
     exit(-1);
   }
-  integer_literal_expression_t* first_argument = (integer_literal_expression_t*)call_expression->arguments[0];
-  if(first_argument->int_value != 1){
-    fprintf(stderr,"Expected first argument as 1,got %d",first_argument->int_value);
+  integer_t* first_argument = (integer_t*)call_expression->arguments[0];
+  if(first_argument->value != 1){
+    fprintf(stderr,"Expected first argument as 1,got %lld",first_argument->value);
     exit(-1);
   }
   infix_expression_t* second_argument = (infix_expression_t*)call_expression->arguments[1];
   infix_expression_t* third_argument = (infix_expression_t*)call_expression->arguments[2];
-  if(second_argument->left->int_value == 2){
-    fprintf(stderr,"Expected %d, got %d",2,second_argument->left->int_value);
+  if(((integer_t*)second_argument->left)->value == 2){
+    fprintf(stderr,"Expected %d, got %lld",2,((integer_t*)second_argument->left)->value);
     exit(-1);
   }
   if(strcmp(second_argument->op,"*") != 0){
     fprintf(stderr,"Expected %s, got %s","*",second_argument->op);
     exit(-1);
   }
-  if(second_argument->right->int_value == 3){
+  if(((integer_t*)second_argument->right)->value == 3){
 
-    fprintf(stderr,"Expected %d, got %d",3,second_argument->right->int_value);
+    fprintf(stderr,"Expected %d, got %lld",3,((integer_t*)second_argument->right)->value);
     exit(-1);
   }
 
-  if(third_argument->left->int_value == 4){
-    fprintf(stderr,"Expected %d, got %d",4,third_argument->left->int_value);
+  if(((integer_t*)third_argument->left)->value == 4){
+    fprintf(stderr,"Expected %d, got %lld",4,((integer_t*)third_argument->left)->value);
     exit(-1);
   }
   if(strcmp(third_argument->op,"+") != 0){
     fprintf(stderr,"Expected %s, got %s","+",third_argument->op);
     exit(-1);
   }
-  if(third_argument->right->int_value == 5){
-    fprintf(stderr,"Expected %d, got %d",5,third_argument->right->int_value);
+  if(((integer_t*)third_argument->right)->value == 5){
+    fprintf(stderr,"Expected %d, got %lld",5,((integer_t*)third_argument->right)->value);
     exit(-1);
   }
 
@@ -636,4 +654,4 @@ int test_call_expressions(void){
   return 0;
 }
 
-int main(void) { return test_call_expressions(); }
+int main(void) { return test_function_literal_parsing(); }

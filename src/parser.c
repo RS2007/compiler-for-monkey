@@ -111,7 +111,7 @@ char* get_body_string_function(function_literal_t* function_expression){
 char* print_function_string(void* function_expression_cast_to_void){
   function_literal_t* function_expression = (function_literal_t*)function_expression_cast_to_void;
   char* function_expression_string = (char*)malloc(STRING_MAX_SIZE);
-  sprintf(function_expression_string,"%s(%s)%s","fn",get_concated_arguments_string(function_expression->arguments,function_expression->arguments_size),get_body_string_function(function_expression));
+  sprintf(function_expression_string,"%s(%s)%s","fn",get_concated_arguments_string(function_expression->arguments,function_expression->arguments_length),get_body_string_function(function_expression));
   return function_expression_string;
 }
 
@@ -344,7 +344,7 @@ expression_t* parse_grouped_expression(parser_t* parser)
 statement_t* parse_expression_statement(parser_t* parser)
 {
     expression_statement_t* stmt = (expression_statement_t*)malloc(sizeof(expression_statement_t));
-    stmt->token = parser->curr_token->type;
+    // stmt->token = parser->curr_token->type;
     stmt->expression = parse_expression(parser, LOWEST);
     stmt->statement.node.token_literal = expression_token_literal;
     stmt->statement.node.string = print_expression_statement_string;

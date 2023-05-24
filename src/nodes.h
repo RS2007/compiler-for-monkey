@@ -1,7 +1,7 @@
 #pragma once
 
 #include "token.h"
-#include <cstddef>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -70,7 +70,6 @@ typedef struct integer_t {
   long long value; // CHECK: not sure about the type here
 } integer_t;
 
-
 typedef struct prefix_expression_t {
   expression_t expression;
   token_t *token;
@@ -134,7 +133,7 @@ typedef struct function_literal_t {
   expression_t **arguments;
   size_t arguments_length;
   size_t arguments_capacity;
-  block_statement_t* body;
+  block_statement_t *body;
 } function_literal_t;
 
 typedef struct call_expression_t {
