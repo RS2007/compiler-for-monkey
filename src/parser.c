@@ -22,7 +22,7 @@ char* print_program_string(void* program_node_cast_to_void)
     program_t* program_node = ((program_t*)program_node_cast_to_void);
     char* program_node_string = (char*)malloc(32768 * sizeof(char));
     program_node_string[0] = '\0';
-    for (int i = 0; i < program_node->statements_size; ++i) {
+    for (int i = 0; i < program_node->statements_length; ++i) {
         statement_t* stmt = program_node->statements[i];
         char temp_string[512];
         sprintf(temp_string, "%s", stmt->string((void*)stmt));
