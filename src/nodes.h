@@ -3,6 +3,7 @@
 #include "token.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef enum node_type {
   PROGRAM,
@@ -12,10 +13,20 @@ typedef enum node_type {
 
 typedef enum statement_type {
   LET_STATEMENT,
+  RETURN_STATEMENT,
+  EXPRESSION_STATEMENT,
+  BLOCK_STATEMENT,
+  IF_EXPRESSION,
+  FUNCTION_EXPRESSION,
+  CALL_EXPRESSION,
 } statement_type;
 
 typedef enum expression_type {
-  UNIMPLEMENTED,
+  INTEGER_LITERAL,
+  IDENTIFIER,
+  BOOLEAN_LITERAL,
+  PREFIX_EXPRESSION,
+  INFIX_EXPRESSION,
 } expression_type;
 
 typedef char *(*Token_literal)(void *);
@@ -24,281 +35,114 @@ typedef void (*Statement_node)(void *);
 typedef void (*Expression_node)(void *);
 typedef char *(*String)(void *);
 
-typedef struct expression_t {
+typedef struct node_t {
   node_type type;
-  token_type token;
   Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
   String string;
-  int int_value;
-  struct expression_t *right;
-  char *op;
-  struct expression_t *left;
-  bool boolean_value;
-} expression_t;
+} node_t;
 
 typedef struct statement_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  char *iden_value;
-  Statement_node statement_node;
-  token_type token;
-  char *iden_name;
-  expression_t *expression;
-  String string;
-  struct statement_t **statements;
-  int statements_length;
-  int statements_capacity;
+  node_t node;
+  statement_type type;
 } statement_t;
 
+typedef struct expression_t {
+  node_t node;
+  expression_type type;
+} expression_t;
+
 typedef struct program_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  // a dynamic array for statements
+  node_t node; // struct composition
   statement_t **statements;
-  int statements_size;
-  int statements_capacity;
-  String string;
+  size_t statements_length;
+  size_t statements_capacity;
 } program_t;
 
-typedef struct let_statement_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  char *iden_value;
-  Statement_node statement_node;
-  token_type token;
-  char *iden_name;
-  expression_t *expression;
-  String string;
-  // TODO: this field is not correct, fix this asap expression_type value;
-  statement_t **statements;
-  int statements_length;
-  int statements_capacity;
-} let_statement_t;
+typedef struct identifier_t {
+  expression_t expression; // struct composition
+  token_t *token;
+  char *value;
+} identifier_t;
 
-typedef struct ret_statement_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  char *iden_value;
-  Statement_node statement_node;
-  token_type token;
-  char *iden_name;
-  expression_t *expression;
-  String string;
-  statement_t **statements;
-  int statements_length;
-  int statements_capacity;
-} ret_statement_t;
-
-typedef struct block_statement_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  char *iden_value;
-  Statement_node statement_node;
-  token_type token;
-  char *iden_name;
-  expression_t *expression;
-  String string;
-  // TODO: this field is not correct, fix this asap expression_type value;
-  statement_t **statements;
-  int statements_length;
-  int statements_capacity;
-} block_statement_t;
-
-typedef struct expression_statement_t {
-  node_type type;
-  Token_literal token_literal;
-  Value value;
-  char *iden_value;
-  Statement_node statement_node;
-  token_type token;
-  char *iden_name;
-  expression_t *expression;
-  String string;
-  statement_t **statements;
-  int statements_length;
-  int statements_capacity;
-} expression_statement_t;
-
-typedef struct integer_literal_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
-  expression_t *right;
-  char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
-} integer_literal_expression_t;
-
-typedef struct boolean_literal_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
-  expression_t *right;
-  char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
-} boolean_literal_expression_t;
+typedef struct integer_t {
+  expression_t expression;
+  token_t *token;
+  long long value; // CHECK: not sure about the type here
+} integer_t;
 
 typedef struct prefix_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
+  expression_t expression;
+  token_t *token;
   expression_t *right;
   char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
 } prefix_expression_t;
 
 typedef struct infix_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
+  expression_t expression;
+  token_t *token;
+  expression_t *left;
   expression_t *right;
   char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
 } infix_expression_t;
 
+typedef struct let_statement_t {
+  statement_t statement;
+  token_t *token;
+  identifier_t *name;
+  expression_t *value;
+} let_statement_t;
+
+typedef struct ret_statement_t {
+  statement_t statement;
+  token_t *token;
+  expression_t *return_value;
+} ret_statement_t;
+
+typedef struct expression_statement_t {
+  statement_t statement;
+  token_t *token;
+  expression_t *expression;
+} expression_statement_t;
+
+typedef struct block_statement_t {
+  statement_t statement;
+  token_t *token;
+  statement_t **statements;
+  size_t statements_length;
+  size_t statements_capacity;
+} block_statement_t;
+
+typedef struct boolean_expression_t {
+  expression_t expression;
+  token_t *token;
+  bool value;
+} boolean_expression_t;
+
 typedef struct if_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
-  expression_t *right;
-  char *op;
-  expression_t *left;
-  bool boolean_value;
+  expression_t expression;
+  token_t *token;
   expression_t *condition;
   block_statement_t *consequence;
   block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
 } if_expression_t;
 
-typedef struct function_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
-  expression_t *right;
-  char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
+typedef struct function_literal_t {
+  expression_t expression;
+  token_t *token;
+  expression_t *function;
+  expression_t **arguments;
+  size_t arguments_length;
+  size_t arguments_capacity;
   block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
-} function_expression_t;
+} function_literal_t;
 
 typedef struct call_expression_t {
-  node_type type;
-  token_type token;
-  Token_literal token_literal;
-  Value value;
-  Expression_node expression_node;
-  String string;
-  int int_value;
-  expression_t *right;
-  char *op;
-  expression_t *left;
-  bool boolean_value;
-  expression_t *condition;
-  block_statement_t *consequence;
-  block_statement_t *alternative;
-  expression_t **parameters;
-  int parameters_length;
-  int parameters_capacity;
-  block_statement_t *body;
-  expression_t* function;
-  expression_t** arguments;
-  int arguments_length;
-  int arguments_capacity;
+  expression_t expression;
+  token_t *token;
+  expression_t *function;
+  expression_t **arguments;
+  size_t arguments_length;
+  size_t arguments_capacity;
 } call_expression_t;
 
 typedef expression_t *(*prefix_parse_function)();
