@@ -155,6 +155,7 @@ expression_t *parse_boolean_expression();
 expression_t *parse_grouped_expression();
 expression_t *parse_if_expression();
 expression_t *parse_function_expression();
+expression_t *parse_call_expression();
 
 expression_t *parse_infix_function();
 
@@ -178,8 +179,7 @@ static prefix_parse_function prefix_parse_functions[] = {
     NULL,
     NULL,
     parse_function_expression,
-    NULL,
-    parse_boolean_expression,
+    NULL, parse_boolean_expression,
     parse_boolean_expression,
     parse_if_expression,
     NULL,
@@ -198,7 +198,7 @@ static infix_parse_function infix_parse_functions[] = {
     // Delimiters
     NULL, NULL,
 
-    NULL, NULL, NULL, NULL,
+    parse_call_expression, NULL, NULL, NULL,
 
     // Keywords
     NULL, NULL, NULL, NULL, NULL, NULL, NULL,

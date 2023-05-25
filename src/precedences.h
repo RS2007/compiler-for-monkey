@@ -8,6 +8,7 @@ typedef enum precedeece {
   SUM,
   PRODUCT,
   PREFIX,
+  CALL
 } precedence_t;
 
 static precedence_t precedences_array[] = {
@@ -17,7 +18,7 @@ static precedence_t precedences_array[] = {
     // Delimiters
     LOWEST, LOWEST,
 
-    LOWEST, LOWEST, LOWEST, LOWEST,
+    CALL, LOWEST, LOWEST, LOWEST,
 
     // Keywords
     LOWEST, LOWEST, LOWEST, LOWEST, LOWEST, LOWEST, LOWEST,

@@ -576,6 +576,47 @@ expression_t* parse_prefix_expression(parser_t* parser)
     return (expression_t*)expression;
 }
 
+void push_to_call_arguments_array(call_expression_t* call_expression, expression_t* expression)
+{
+
+    if (call_expression->arguments_length + 1 > call_expression->arguments_capacity) {
+        call_expression->arguments = realloc(call_expression->arguments, call_expression->arguments_capacity * 2);
+        printf("Realloced");
+    }
+    call_expression->arguments[call_expression->arguments_length++] = expression;
+}
+
+void parse_call_arguments(call_expression_t* call_expression, parser_t* parser)
+{
+    // 1. Initialize the arguments array
+    call_expression->arguments = (expression_t**)calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(expression_t));
+    call_expression->arguments_length = 0;
+    call_expression->arguments_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
+    while (!is_curr_token(parser, RPAREN)) {
+        expression_t* expression = parse_expression(parser, LOWEST);
+        push_to_call_arguments_array(call_expression, expression);
+        if (is_peek_token(parser, RPAREN)) {
+            next_token_parser(parser);
+            break;
+        }
+        if (!is_peek_token(parser, COMMA)) {
+            fprintf(stderr, "Expected , got %s", token_strings[parser->curr_token->type]);
+        }
+        next_token_parser(parser);
+        next_token_parser(parser);
+    }
+}
+
+expression_t* parse_call_expression(parser_t* parser,expression_t* left)
+{
+    call_expression_t* expression = (call_expression_t*)malloc(sizeof(call_expression_t));
+    expression->function = left;
+    next_token_parser(parser);
+    parse_call_arguments(expression, parser);
+
+    return (expression_t*)expression;
+}
+
 expression_t* parse_infix_function(parser_t* parser, expression_t* left)
 {
     infix_expression_t* infix_expression = (infix_expression_t*)malloc(sizeof(infix_expression_t));

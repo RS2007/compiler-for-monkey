@@ -621,7 +621,7 @@ int test_call_expressions(void)
     }
     infix_expression_t* second_argument = (infix_expression_t*)call_expression->arguments[1];
     infix_expression_t* third_argument = (infix_expression_t*)call_expression->arguments[2];
-    if (((integer_t*)second_argument->left)->value == 2) {
+    if (((integer_t*)second_argument->left)->value != 2) {
         fprintf(stderr, "Expected %d, got %lld", 2, ((integer_t*)second_argument->left)->value);
         exit(-1);
     }
@@ -629,13 +629,13 @@ int test_call_expressions(void)
         fprintf(stderr, "Expected %s, got %s", "*", second_argument->op);
         exit(-1);
     }
-    if (((integer_t*)second_argument->right)->value == 3) {
+    if (((integer_t*)second_argument->right)->value != 3) {
 
         fprintf(stderr, "Expected %d, got %lld", 3, ((integer_t*)second_argument->right)->value);
         exit(-1);
     }
 
-    if (((integer_t*)third_argument->left)->value == 4) {
+    if (((integer_t*)third_argument->left)->value != 4) {
         fprintf(stderr, "Expected %d, got %lld", 4, ((integer_t*)third_argument->left)->value);
         exit(-1);
     }
@@ -643,7 +643,7 @@ int test_call_expressions(void)
         fprintf(stderr, "Expected %s, got %s", "+", third_argument->op);
         exit(-1);
     }
-    if (((integer_t*)third_argument->right)->value == 5) {
+    if (((integer_t*)third_argument->right)->value != 5) {
         fprintf(stderr, "Expected %d, got %lld", 5, ((integer_t*)third_argument->right)->value);
         exit(-1);
     }
@@ -665,6 +665,6 @@ int main(void)
     test_parsing_identifiers();
     boolean_parse_test();
     test_grouped_expressions();
-    // test_call_expressions();
-    return test_function_literal_parsing();
+    test_function_literal_parsing();
+    return test_call_expressions();
 }
