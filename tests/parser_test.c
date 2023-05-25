@@ -652,6 +652,33 @@ int test_call_expressions(void)
     return 0;
 }
 
+int test_call_with_operator_precedence(void){
+  typedef struct test_t {
+    char* input;
+    char* expected;
+  } test_t;
+  test_t tests[] = {{"a + add(b*c) + d","((a + add((b * c))) + d)"},
+  {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))","add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
+    {"add(a + b + c * d / f + g)","add((((a + b) + ((c * d) / f)) + g))"}
+  };
+  int tests_size = sizeof(tests)/sizeof(tests[0]);
+  int i;
+  for(i = 0;i<tests_size;++i){
+    char* input = tests[i].input;
+    char* expected = tests[i].expected;
+    lexer_t* lexer = new_lexer(input,strlen(input));
+    parser_t* parser = new_parser(lexer);
+    program_t* program_node = parse_program(parser);
+    char* program_string = program_node->node.string((void*)program_node);
+    if(strcmp(expected,program_string)!=0){
+      fprintf(stderr,"Expected %s,got %s",expected,program_string);
+      exit(-1);
+    }
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
 int main(void)
 {
     test_let_statements();
@@ -666,5 +693,6 @@ int main(void)
     boolean_parse_test();
     test_grouped_expressions();
     test_function_literal_parsing();
-    return test_call_expressions();
+    test_call_expressions();
+    return test_call_with_operator_precedence();
 }

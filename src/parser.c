@@ -97,7 +97,20 @@ char* print_block_statement(void* block_statement_cast_to_void)
 
 char* get_concated_arguments_string(expression_t** parameters, int parameters_length)
 {
-    return "hello";
+    char* concated_arguments_string = (char*)malloc(STRING_MAX_SIZE);
+    int i;
+    concated_arguments_string[0] = '\0';
+    for(i = 0;i<parameters_length;++i){
+      expression_t* curr_param = parameters[i];  
+      char* expr_string = curr_param->node.string((void*)curr_param);
+      strcat(concated_arguments_string,expr_string);
+      if(i != parameters_length-1){
+        strcat(concated_arguments_string,", ");
+      }
+
+    }
+    strcat(concated_arguments_string,"\0");
+    return concated_arguments_string;
 }
 
 char* get_body_string_function(function_literal_t* function_expression)
@@ -408,7 +421,7 @@ char* get_boolean_expression_string(void* boolean_expression_cast_to_void)
     return boolean_string;
 }
 
-char* get_call_expressibon_string(void* call_expression_cast_to_void)
+char* get_call_expression_string(void* call_expression_cast_to_void)
 {
     call_expression_t* call_expression = (call_expression_t*)call_expression_cast_to_void;
     char* call_string = (char*)malloc(STRING_MAX_SIZE);
@@ -611,6 +624,8 @@ expression_t* parse_call_expression(parser_t* parser,expression_t* left)
 {
     call_expression_t* expression = (call_expression_t*)malloc(sizeof(call_expression_t));
     expression->function = left;
+    expression->expression.type = CALL_EXPRESSION;
+    expression->expression.node.string = get_call_expression_string;
     next_token_parser(parser);
     parse_call_arguments(expression, parser);
 

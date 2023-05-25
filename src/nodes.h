@@ -16,9 +16,6 @@ typedef enum statement_type {
   RETURN_STATEMENT,
   EXPRESSION_STATEMENT,
   BLOCK_STATEMENT,
-  IF_EXPRESSION,
-  FUNCTION_EXPRESSION,
-  CALL_EXPRESSION,
 } statement_type;
 
 typedef enum expression_type {
@@ -27,6 +24,9 @@ typedef enum expression_type {
   BOOLEAN_LITERAL,
   PREFIX_EXPRESSION,
   INFIX_EXPRESSION,
+  IF_EXPRESSION,
+  FUNCTION_EXPRESSION,
+  CALL_EXPRESSION,
 } expression_type;
 
 typedef char *(*Token_literal)(void *);
@@ -179,7 +179,8 @@ static prefix_parse_function prefix_parse_functions[] = {
     NULL,
     NULL,
     parse_function_expression,
-    NULL, parse_boolean_expression,
+    NULL,
+    parse_boolean_expression,
     parse_boolean_expression,
     parse_if_expression,
     NULL,
