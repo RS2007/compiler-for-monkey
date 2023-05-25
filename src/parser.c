@@ -279,6 +279,31 @@ bool expect_peek_token(parser_t* parser, token_type type)
     return false;
 }
 
+
+
+expression_t* parse_expression(parser_t* parser, precedence_t precedence)
+{
+    prefix_parse_function prefix = prefix_parse_functions[parser->curr_token->type];
+    // TODO: not sure about this check, might have to remove later
+    if (prefix == NULL) {
+        fprintf(stderr, "Failure at %s\n", parser->lexer->input);
+        fprintf(stderr, "Failure while parsing: %d.%s\n", parser->curr_token->type, parser->curr_token->literal);
+        fprintf(stderr, "Prefix is null\n");
+        return NULL;
+    }
+    expression_t* left_expression = prefix(parser);
+
+    while (!is_peek_token(parser, SEMICOLON) && precedence < peek_precedence(parser)) {
+        prefix_parse_function infix = infix_parse_functions[parser->peek_token->type];
+        if (infix == NULL) {
+            return left_expression;
+        }
+        next_token_parser(parser);
+        left_expression = infix(parser, left_expression);
+    }
+    return left_expression;
+}
+
 statement_t* parse_let_statement(parser_t* parser)
 {
     let_statement_t* stmt = (let_statement_t*)malloc(sizeof(let_statement_t));
@@ -309,11 +334,14 @@ statement_t* parse_let_statement(parser_t* parser)
         // FIXME: find a way to bubble errors and then print them in the root
         // program
     }
+    next_token_parser(parser);
+    stmt->value = parse_expression(parser,LOWEST);
     while (!is_curr_token(parser, SEMICOLON)) {
         next_token_parser(parser);
     }
     return (statement_t*)stmt;
 }
+
 statement_t* parse_return_statement(parser_t* parser)
 {
     ret_statement_t* stmt = (ret_statement_t*)malloc(sizeof(ret_statement_t));
@@ -321,33 +349,11 @@ statement_t* parse_return_statement(parser_t* parser)
     stmt->statement.node.token_literal = ret_token_literal;
     stmt->statement.node.string = print_return_string;
     next_token_parser(parser);
+    stmt->return_value = parse_expression(parser,LOWEST);
     while (!is_curr_token(parser, SEMICOLON)) {
         next_token_parser(parser);
     }
     return (statement_t*)stmt;
-}
-
-expression_t* parse_expression(parser_t* parser, precedence_t precedence)
-{
-    prefix_parse_function prefix = prefix_parse_functions[parser->curr_token->type];
-    // TODO: not sure about this check, might have to remove later
-    if (prefix == NULL) {
-        fprintf(stderr, "Failure at %s\n", parser->lexer->input);
-        fprintf(stderr, "Failure while parsing: %d.%s\n", parser->curr_token->type, parser->curr_token->literal);
-        fprintf(stderr, "Prefix is null\n");
-        return NULL;
-    }
-    expression_t* left_expression = prefix(parser);
-
-    while (!is_peek_token(parser, SEMICOLON) && precedence < peek_precedence(parser)) {
-        prefix_parse_function infix = infix_parse_functions[parser->peek_token->type];
-        if (infix == NULL) {
-            return left_expression;
-        }
-        next_token_parser(parser);
-        left_expression = infix(parser, left_expression);
-    }
-    return left_expression;
 }
 
 expression_t* parse_grouped_expression(parser_t* parser)

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool test_let_statement(statement_t* ast_statement, char* name)
+bool test_let_statement(statement_t* ast_statement, char* name,char* value)
 {
     char* token_literal = ast_statement->node.token_literal((void*)ast_statement);
     if (strcmp(token_literal, "LET") != 0) {
@@ -16,6 +16,10 @@ bool test_let_statement(statement_t* ast_statement, char* name)
         fprintf(stderr, "Expected: name of literal: %s, got %s", name,
             let_statement->name->value);
         return false;
+    }
+    if(strcmp(let_statement->value->node.string((void*)let_statement->value),value) != 0){
+      fprintf(stderr,"Got %s, Expected %s",let_statement->value->node.string((void*)let_statement->value),value);  
+      exit(-1);
     }
     return true;
 }
@@ -40,11 +44,12 @@ int test_let_statements(void)
             3, program_node->statements_length);
         return 69;
     }
-    char* expectedIdentifiers[] = { "x", "y", "foobar" };
+    char* expected_identifiers[] = { "x", "y", "foobar" };
+    char* expected_value_strings[] = {"5","10","838383"};
     int i;
     for (i = 0; i < 3; ++i) {
         statement_t* stmt = program_node->statements[i];
-        if (!test_let_statement(stmt, expectedIdentifiers[i])) {
+        if (!test_let_statement(stmt, expected_identifiers[i],expected_value_strings[i])) {
             // fprintf(stderr,"Expected: %s,got:
             // %s",expectedIdentifiers[i],((let_statement_t*)stmt)->iden_name);
             fprintf(stderr, "Hello this is an error");
@@ -62,6 +67,7 @@ int test_ret_statements(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
+    char* expected_values[] = {"5","10","993322"};
     if (parser->errors_size != 0) {
         int i;
         for (i = 0; i < parser->errors_size; ++i) {
@@ -76,9 +82,13 @@ int test_ret_statements(void)
     }
     int i;
     for (i = 0; i < 3; ++i) {
-        statement_t* stmt = program_node->statements[i];
-        if (strcmp(stmt->node.token_literal((void*)stmt), "RETURN") != 0) {
+        ret_statement_t* stmt = (ret_statement_t*)program_node->statements[i];
+        if (strcmp(stmt->statement.node.token_literal((void*)stmt), "RETURN") != 0) {
             fprintf(stderr, "Token literal not RETURN");
+            return 69;
+        }
+        if(strcmp(stmt->return_value->node.string((void*)stmt->return_value),expected_values[i])){
+            fprintf(stderr, "Expected %s, Got %s",expected_values[i],stmt->return_value->node.string((void*)stmt->return_value));
             return 69;
         }
     }
