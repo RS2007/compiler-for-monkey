@@ -1,19 +1,25 @@
+#include "evaluator.h"
 #include "lexer.h"
+#include "object.h"
+#include "parser.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_STRING_SIZE 1000
-
-int main(void) {
-  char user_input[MAX_STRING_SIZE];
-  printf(">>");
-  fgets(user_input, MAX_STRING_SIZE, stdin);
-  lexer_t *lexer = new_lexer(user_input, strlen(user_input));
-  while (1) {
-    token_t *current_token = next_token_lexer(lexer);
-    if (current_token->type == END_OF_FILE) {
-      break;
+int main(void)
+{
+    while (1) {
+        char user_input[STRING_MAX_SIZE];
+        user_input[0] = '\0';
+        printf(">>");
+        fgets(user_input, STRING_MAX_SIZE, stdin);
+        if (strcmp(user_input, "quit\n") == 0) {
+            return 0;
+        }
+        lexer_t* lexer = new_lexer(user_input, strlen(user_input));
+        parser_t* parser = new_parser(lexer);
+        program_t* program_node = parse_program(parser);
+        object_t* object = eval((node_t*)program_node);
+        printf("%s\n", object->inspect((void*)object));
     }
-    fprintf(stdout, "%s\n", token_strings[current_token->type]);
-  }
 }

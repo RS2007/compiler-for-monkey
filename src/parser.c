@@ -2,6 +2,7 @@
 #include "nodes.h"
 #include "precedences.h"
 #include "token.h"
+#include "utils.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,10 +13,6 @@
 #define _GNU_SOURCE 1
 #endif
 
-#define DEFAULT_DYNAMIC_ARR_SIZE 10
-#define STRING_MAX_SIZE 1024
-#define MAX_ERROR_SIZE 1024
-#define unimplemented printf("\nUnimplemented\n");
 
 char* print_program_string(void* program_node_cast_to_void)
 {
@@ -396,6 +393,7 @@ statement_t* parse_expression_statement(parser_t* parser)
 {
     expression_statement_t* stmt = (expression_statement_t*)malloc(sizeof(expression_statement_t));
     // stmt->token = parser->curr_token->type;
+    stmt->statement.type = EXPRESSION_STATEMENT;
     stmt->expression = parse_expression(parser, LOWEST);
     stmt->statement.node.token_literal = expression_token_literal;
     stmt->statement.node.string = print_expression_statement_string;
@@ -445,6 +443,7 @@ expression_t* parse_boolean_expression(parser_t* parser)
         fprintf(stderr, "token literal must be a boolean");
         exit(-1);
     }
+    expression->expression.type = BOOLEAN_LITERAL;
     expression->value = is_true ? true : false;
     expression->expression.node.string = get_boolean_expression_string;
     return (expression_t*)expression;
@@ -475,6 +474,7 @@ statement_t* parse_block_statement(parser_t* parser)
 {
     // setup the block_statement
     block_statement_t* block_statement = malloc(sizeof(block_statement_t));
+    block_statement->statement.type = BLOCK_STATEMENT;
     block_statement->statements_length = 0;
     block_statement->statements_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
     block_statement->statements = calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(statement_t));
