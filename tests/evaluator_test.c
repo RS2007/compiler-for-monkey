@@ -99,9 +99,90 @@ static int test_bang_operator(){
   return 0;
 }
 
+static int test_prefix_minus_operator(){
+  typedef struct test_t{
+    char* input;
+    int value;
+  } test_t;
+  test_t tests[] = {{"5", 5},{"10", 10},{"-5", -5},{"-10", -10}};
+  size_t tests_size = sizeof(tests)/sizeof(tests[0]);
+  for(int i = 0;i<tests_size;++i){
+    test_t curr_test = tests[i];
+    object_t* evaluated = test_eval(curr_test.input);
+    if(((integer_obj_t*)evaluated)->value != curr_test.value){
+      fprintf(stderr,"Test failed");
+      exit(-1);
+    }
+  }
+  fprintf(stdout,"All test cases passed ✅");
+  return 0;
+}
+
+static int test_integer_infix_expressions(){
+  typedef struct test_t {
+    char* input;
+    int value;
+  } test_t;
+  test_t tests[] = {{"5", 5},{"10", 10},{"-5", -5},{"-10", -10},{"5 + 5 + 5 + 5 - 10", 10},{"2 * 2 * 2 * 2 * 2", 32},{"-50 + 100 + -50", 0},{"5 * 2 + 10", 20},{"5 + 2 * 10", 25},{"20 + 2 * -10", 0},{"50 / 2 * 2 + 10", 60},{"2 * (5 + 10)", 30},{"3 * 3 * 3 + 10", 37},{"3 * (3 * 3) + 10", 37},{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50}};
+  size_t tests_size = sizeof(tests)/sizeof(tests[0]);
+  for(int i = 0;i<tests_size;++i){
+    test_t curr_test = tests[i];
+    object_t* evaluated = test_eval(curr_test.input);
+    if(((integer_obj_t*)evaluated)->value != curr_test.value){
+      fprintf(stderr,"Test failed");
+      exit(-1);
+    }
+  }
+  fprintf(stdout,"All test cases passed ✅");
+  return 0;
+}
+
+static int test_bool_infix_expressions(){
+  typedef struct test_t {
+    char* input;
+    bool value;
+  } test_t;
+  test_t tests[] = {
+    {"true", true},
+    {"false", false},
+    {"1 < 2", true},
+    {"1 > 2", false},
+    {"1 < 1", false},
+    {"1 > 1", false},
+    {"1 == 1", true},
+    {"1 != 1", false},
+    {"1 == 2", false},
+    {"1 != 2", true},
+    {"true == true", true},
+    {"false == false", true},
+    {"true == false", false},
+    {"true != false", true},
+    {"false != true", true},
+    {"(1 < 2) == true", true},
+    {"(1 < 2) == false", false},
+    {"(1 > 2) == true", false},
+    {"(1 > 2) == false", true},
+  };
+  size_t tests_size = sizeof(tests)/sizeof(tests[0]);
+  for(int i = 0;i<tests_size;++i){
+    test_t curr_test = tests[i];
+    object_t* evaluated = test_eval(curr_test.input);
+    if(((integer_obj_t*)evaluated)->value != curr_test.value){
+      fprintf(stderr,"Test failed");
+      exit(-1);
+    }
+  }
+  fprintf(stdout,"All test cases passed ✅");
+  return 0;
+}
+
+
 int main(void)
 {
   test_eval_integer_expression();
   test_eval_boolean_expression();  
-  return test_bang_operator();
+  test_bang_operator();
+  test_prefix_minus_operator();
+  test_integer_infix_expressions();
+  return test_bool_infix_expressions();
 }
