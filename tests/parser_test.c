@@ -1,10 +1,11 @@
 #include "../src/parser.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-bool test_let_statement(statement_t* ast_statement, char* name,char* value)
+bool test_let_statement(statement_t* ast_statement, char* name, char* value)
 {
     char* token_literal = ast_statement->node.token_literal((void*)ast_statement);
     if (strcmp(token_literal, "LET") != 0) {
@@ -17,9 +18,9 @@ bool test_let_statement(statement_t* ast_statement, char* name,char* value)
             let_statement->name->value);
         return false;
     }
-    if(strcmp(let_statement->value->node.string((void*)let_statement->value),value) != 0){
-      fprintf(stderr,"Got %s, Expected %s",let_statement->value->node.string((void*)let_statement->value),value);  
-      exit(-1);
+    if (strcmp(let_statement->value->node.string((void*)let_statement->value), value) != 0) {
+        fprintf(stderr, "Got %s, Expected %s", let_statement->value->node.string((void*)let_statement->value), value);
+        exit(-1);
     }
     return true;
 }
@@ -45,11 +46,11 @@ int test_let_statements(void)
         return 69;
     }
     char* expected_identifiers[] = { "x", "y", "foobar" };
-    char* expected_value_strings[] = {"5","10","838383"};
+    char* expected_value_strings[] = { "5", "10", "838383" };
     int i;
     for (i = 0; i < 3; ++i) {
         statement_t* stmt = program_node->statements[i];
-        if (!test_let_statement(stmt, expected_identifiers[i],expected_value_strings[i])) {
+        if (!test_let_statement(stmt, expected_identifiers[i], expected_value_strings[i])) {
             // fprintf(stderr,"Expected: %s,got:
             // %s",expectedIdentifiers[i],((let_statement_t*)stmt)->iden_name);
             fprintf(stderr, "Hello this is an error");
@@ -67,7 +68,7 @@ int test_ret_statements(void)
     lexer_t* lexer = new_lexer(input, strlen(input));
     parser_t* parser = new_parser(lexer);
     program_t* program_node = parse_program(parser);
-    char* expected_values[] = {"5","10","993322"};
+    char* expected_values[] = { "5", "10", "993322" };
     if (parser->errors_size != 0) {
         int i;
         for (i = 0; i < parser->errors_size; ++i) {
@@ -87,8 +88,8 @@ int test_ret_statements(void)
             fprintf(stderr, "Token literal not RETURN");
             return 69;
         }
-        if(strcmp(stmt->return_value->node.string((void*)stmt->return_value),expected_values[i])){
-            fprintf(stderr, "Expected %s, Got %s",expected_values[i],stmt->return_value->node.string((void*)stmt->return_value));
+        if (strcmp(stmt->return_value->node.string((void*)stmt->return_value), expected_values[i])) {
+            fprintf(stderr, "Expected %s, Got %s", expected_values[i], stmt->return_value->node.string((void*)stmt->return_value));
             return 69;
         }
     }
@@ -467,6 +468,9 @@ int test_if_expression(void)
         exit(-1);
     }
     expression_statement_t* stmt = (expression_statement_t*)program_node->statements[0];
+    if (stmt->expression->type != IF_EXPRESSION) {
+        assert("This is the problem");
+    }
     if_expression_t* expr = (if_expression_t*)stmt->expression;
     infix_expression_t* condition = (infix_expression_t*)expr->condition;
     if (strcmp(condition->op, "<") != 0) {
@@ -662,31 +666,31 @@ int test_call_expressions(void)
     return 0;
 }
 
-int test_call_with_operator_precedence(void){
-  typedef struct test_t {
-    char* input;
-    char* expected;
-  } test_t;
-  test_t tests[] = {{"a + add(b*c) + d","((a + add((b * c))) + d)"},
-  {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))","add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
-    {"add(a + b + c * d / f + g)","add((((a + b) + ((c * d) / f)) + g))"}
-  };
-  int tests_size = sizeof(tests)/sizeof(tests[0]);
-  int i;
-  for(i = 0;i<tests_size;++i){
-    char* input = tests[i].input;
-    char* expected = tests[i].expected;
-    lexer_t* lexer = new_lexer(input,strlen(input));
-    parser_t* parser = new_parser(lexer);
-    program_t* program_node = parse_program(parser);
-    char* program_string = program_node->node.string((void*)program_node);
-    if(strcmp(expected,program_string)!=0){
-      fprintf(stderr,"Expected %s,got %s",expected,program_string);
-      exit(-1);
+int test_call_with_operator_precedence(void)
+{
+    typedef struct test_t {
+        char* input;
+        char* expected;
+    } test_t;
+    test_t tests[] = { { "a + add(b*c) + d", "((a + add((b * c))) + d)" },
+        { "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
+        { "add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))" } };
+    int tests_size = sizeof(tests) / sizeof(tests[0]);
+    int i;
+    for (i = 0; i < tests_size; ++i) {
+        char* input = tests[i].input;
+        char* expected = tests[i].expected;
+        lexer_t* lexer = new_lexer(input, strlen(input));
+        parser_t* parser = new_parser(lexer);
+        program_t* program_node = parse_program(parser);
+        char* program_string = program_node->node.string((void*)program_node);
+        if (strcmp(expected, program_string) != 0) {
+            fprintf(stderr, "Expected %s,got %s", expected, program_string);
+            exit(-1);
+        }
     }
-  }
-  fprintf(stdout, "All test cases passed ✅");
-  return 0;
+    fprintf(stdout, "All test cases passed ✅");
+    return 0;
 }
 
 int main(void)

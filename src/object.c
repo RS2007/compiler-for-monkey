@@ -42,3 +42,13 @@ char* inspect_null(void* null_object_cast_to_void){
 object_type type_null(){
   return NULL_OBJ;
 }
+
+char* inspect_return(void* return_object_cast_to_void){
+  return_obj_t* return_obj = (return_obj_t*)return_object_cast_to_void; 
+  return return_obj->value->inspect((void*)return_obj->value);
+}
+
+object_type type_return(){
+  return RETURN_VALUE_OBJ;
+}
+

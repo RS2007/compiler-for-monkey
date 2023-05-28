@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang-13
 DEBUGGER = gdb
 C_FLAGS = -Wall -g
 SRC_FOLDER = ./src
@@ -7,7 +7,7 @@ BIN_FOLDER = ./bin
 SOURCES = $(wildcard $(SRC_FOLDER)/*.c)
 HEADERS = $(wildcard $(SRC_FOLDER)/*.h)
 TESTS = $(wildcard $(TEST_FOLDER)/*.c)
-SOURCES_WITHOUT_REPL = $(shell find ./src -type f -name '*.c' ! -name 'repl.c')
+SOURCES_WITHOUT_REPL_EVALUATOR_OBJECT = $(shell find ./src -type f -name '*.c' ! -name 'repl.c' ! -name 'evaluator.c' ! -name 'object.c')
 SOURCES_WITHOUT_MAIN = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'parser.c')
 SOURCES_WITHOUT_MAIN_REPL = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'repl.c')
 BIN = $(wildcard $(BIN_FOLDER)/*)

@@ -4,6 +4,7 @@ typedef enum object_type {
   INTEGER,
   BOOLEAN,
   NULL_OBJ,
+  RETURN_VALUE_OBJ,
 } object_type;
 
 typedef object_type (*Type)();
@@ -34,9 +35,16 @@ typedef struct null_obj_t {
   object_t object;
 } null_obj_t;
 
+typedef struct return_obj_t {
+  object_t object;
+  object_t *value;
+} return_obj_t;
+
 object_type type_int();
 object_type type_boolean();
 object_type type_null();
+object_type type_return();
 char *inspect_int(void *);
 char *inspect_boolean(void *);
 char *inspect_null(void *);
+char *inspect_return(void *);

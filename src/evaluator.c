@@ -7,6 +7,40 @@
 
 object_t* eval(node_t*);
 object_t* eval_expression(expression_t*);
+object_t* eval_statement(statement_t*);
+
+static integer_obj_t* new_integer_obj(long long value)
+{
+    integer_obj_t* integer_obj = (integer_obj_t*)malloc(sizeof(integer_obj_t));
+    integer_obj->value = value;
+    integer_obj->object.type = type_int;
+    integer_obj->object.inspect = inspect_int;
+    return integer_obj;
+}
+
+object_t* eval_if_expression(if_expression_t* if_expr)
+{
+    object_t* condition_obj = eval_expression(if_expr->condition);
+    if (condition_obj->type() != BOOLEAN) {
+        assert("Condition should evaluate to a boolean");
+    }
+    bool is_condition_true = ((boolean_obj_t*)condition_obj)->value;
+
+    if (is_condition_true) {
+        object_t* eval_consequence = eval_statement(if_expr->consequence);
+        return eval_consequence;
+    } else {
+        if (if_expr->alternative == NULL) {
+            null_obj_t* null_obj = (null_obj_t*)malloc(sizeof(null_obj));
+            null_obj->object.type = type_null;
+            null_obj->object.inspect = inspect_null;
+            return (object_t*)null_obj;
+        }
+        object_t* eval_alternative = eval_statement(if_expr->alternative);
+        return eval_alternative;
+    }
+    return NULL;
+}
 
 object_t* eval_infix_expression(infix_expression_t* infix_expr)
 {
@@ -206,7 +240,6 @@ object_t* eval_expression(expression_t* expression)
             null_obj->object.inspect = inspect_null;
             return (object_t*)null_obj;
         }
-        unimplemented();
     }
     case BOOLEAN_LITERAL: {
         boolean_expression_t* boolean_expression = (boolean_expression_t*)expression;
@@ -223,10 +256,10 @@ object_t* eval_expression(expression_t* expression)
     case INFIX_EXPRESSION: {
         infix_expression_t* infix_expression = (infix_expression_t*)expression;
         return eval_infix_expression(infix_expression);
-        unimplemented();
     }
     case IF_EXPRESSION: {
-        unimplemented();
+        if_expression_t* if_expression = (if_expression_t*)expression;
+        return eval_if_expression(if_expression);
     }
     case FUNCTION_EXPRESSION: {
         unimplemented();
@@ -238,6 +271,25 @@ object_t* eval_expression(expression_t* expression)
     return NULL;
 }
 
+object_t* eval_block_statement(block_statement_t* block_statement){
+  object_t* result;
+  for(int i = 0;i< block_statement->statements_length;++i){
+    result = eval_statement(block_statement->statements[i]);
+    if(result != NULL && result->type() == RETURN_VALUE_OBJ){
+      return result;
+    }
+  }
+  return result;
+}
+
+object_t* eval_statements(statement_t** statements, size_t statements_length)
+{
+    object_t* result;
+    for (int i = 0; i < statements_length; ++i) {
+        result = eval_statement(statements[i]);
+    }
+    return result;
+}
 object_t* eval_statement(statement_t* statement)
 {
     switch (statement->type) {
@@ -245,14 +297,21 @@ object_t* eval_statement(statement_t* statement)
         unimplemented();
     }
     case RETURN_STATEMENT: {
-        unimplemented();
+      ret_statement_t* ret_stmt = (ret_statement_t*)statement;
+      return_obj_t* ret_obj = (return_obj_t*)malloc(sizeof(return_obj_t));
+      ret_obj->value = eval_expression(ret_stmt->return_value);
+      ret_obj->object.type = type_return;
+      ret_obj->object.inspect = inspect_return;
+      return (object_t*)ret_obj;
+
     }
     case EXPRESSION_STATEMENT: {
         expression_statement_t* expr = (expression_statement_t*)statement;
         return eval_expression(expr->expression);
     }
     case BLOCK_STATEMENT: {
-        unimplemented();
+        block_statement_t* block = (block_statement_t*)statement;
+        return eval_statements(block->statements, block->statements_length);
     }
     }
     return NULL;
@@ -260,8 +319,16 @@ object_t* eval_statement(statement_t* statement)
 
 object_t* eval_program(program_t* program)
 {
-    statement_t* stmt = program->statements[0];
-    return eval_statement(stmt);
+    object_t* result;
+    for(int i = 0;i < program->statements_length;++i){
+      statement_t* stmt = program->statements[i];
+      result = eval_statement(stmt);
+    
+      if(result->type() == RETURN_VALUE_OBJ){
+        return ((return_obj_t*)result)->value;
+      }
+    }
+    return result;
 }
 
 object_t* eval(node_t* node)
