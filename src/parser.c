@@ -283,6 +283,9 @@ expression_t *parse_expression(parser_t *parser, precedence_t precedence) {
     return NULL;
   }
   expression_t *left_expression = prefix(parser);
+  if (left_expression == NULL) {
+    return NULL;
+  }
 
   while (!is_peek_token(parser, SEMICOLON) &&
          precedence < peek_precedence(parser)) {
@@ -306,11 +309,8 @@ statement_t *parse_let_statement(parser_t *parser) {
   if (!expect_peek_token(parser, IDENT)) {
     char *error_string = (char *)malloc(MAX_ERROR_SIZE);
     snprintf(error_string, MAX_ERROR_SIZE, "Let is not followed by literal");
-    fprintf(stderr, "Let is not followed by literal");
     push_errors_parser(parser, error_string);
-    exit(-1);
-    // FIXME: find a way to bubble errors and then print them in the root
-    // program
+    return NULL;
   }
   // 2. identifier info
   stmt->name = malloc(sizeof(identifier_t));
@@ -319,15 +319,14 @@ statement_t *parse_let_statement(parser_t *parser) {
     char *error_string = (char *)malloc(MAX_ERROR_SIZE);
     snprintf(error_string, MAX_ERROR_SIZE, "Expected token:%s ,Got: %s",
              token_strings[ASSIGN], token_strings[parser->peek_token->type]);
-    printf("Expected token:%s ,Got: %s", token_strings[ASSIGN],
-           token_strings[parser->peek_token->type]);
     push_errors_parser(parser, error_string);
-    exit(-1);
-    // FIXME: find a way to bubble errors and then print them in the root
-    // program
+    return NULL;
   }
   next_token_parser(parser);
   stmt->value = parse_expression(parser, LOWEST);
+  if (stmt->value == NULL) {
+    return NULL;
+  }
   while (!is_curr_token(parser, SEMICOLON)) {
     next_token_parser(parser);
   }
@@ -342,6 +341,9 @@ statement_t *parse_return_statement(parser_t *parser) {
   stmt->statement.type = RETURN_STATEMENT;
   next_token_parser(parser);
   stmt->return_value = parse_expression(parser, LOWEST);
+  if (stmt->return_value == NULL) {
+    return NULL;
+  }
   while (is_peek_token(parser, SEMICOLON)) {
     next_token_parser(parser);
   }
@@ -352,6 +354,9 @@ expression_t *parse_grouped_expression(parser_t *parser) {
   expression_t *expression;
   next_token_parser(parser);
   expression = parse_expression(parser, LOWEST);
+  if (expression == NULL) {
+    return NULL;
+  }
   if (!is_peek_token(parser, RPAREN)) {
     assert(false);
     return NULL;
@@ -386,6 +391,9 @@ statement_t *parse_expression_statement(parser_t *parser) {
   // stmt->token = parser->curr_token->type;
   stmt->statement.type = EXPRESSION_STATEMENT;
   stmt->expression = parse_expression(parser, LOWEST);
+  if (stmt->expression == NULL) {
+    return NULL;
+  }
   stmt->statement.node.token_literal = expression_token_literal;
   stmt->statement.node.string = print_expression_statement_string;
   if (is_peek_token(parser, SEMICOLON)) {
@@ -493,20 +501,32 @@ expression_t *parse_if_expression(parser_t *parser) {
   if_expression_t *if_expression = malloc(sizeof(if_expression_t));
   if_expression->expression.type = IF_EXPRESSION;
   if (!is_peek_token(parser, LPAREN)) {
-    fprintf(stderr, "Expected ( got %s", parser->peek_token->literal);
-    exit(-1);
+    char *error_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(error_msg, MAX_ERROR_SIZE, "Expected ( got %s",
+             parser->peek_token->literal);
+    push_errors_parser(parser, error_msg);
+    return NULL;
   }
   next_token_parser(parser);
   next_token_parser(parser);
   if_expression->condition = parse_expression(parser, LOWEST);
+  if (if_expression->condition == NULL) {
+    return NULL;
+  }
   if (!is_peek_token(parser, RPAREN)) {
-    fprintf(stderr, "Expected ) got %s", parser->peek_token->literal);
-    exit(-1);
+    char *error_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(error_msg, MAX_ERROR_SIZE, "Expected ) got %s",
+             parser->peek_token->literal);
+    push_errors_parser(parser, error_msg);
+    return NULL;
   }
   next_token_parser(parser);
   if (!is_peek_token(parser, LBRACE)) {
-    fprintf(stderr, "Expected { got %s", parser->peek_token->literal);
-    exit(-1);
+    char *error_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(error_msg, MAX_ERROR_SIZE, "Expected { got %s",
+             parser->peek_token->literal);
+    push_errors_parser(parser, error_msg);
+    return NULL;
   }
   next_token_parser(parser);
   if_expression->consequence =
@@ -536,8 +556,9 @@ void push_to_arguments_array(function_literal_t *function_expression,
       expression;
 }
 
-void parse_function_parameters(parser_t *parser,
-                               function_literal_t *function_expression) {
+function_literal_t *
+parse_function_parameters(parser_t *parser,
+                          function_literal_t *function_expression) {
   // creating the expression array
   function_expression->arguments =
       (expression_t **)calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(expression_t));
@@ -546,7 +567,7 @@ void parse_function_parameters(parser_t *parser,
   // parsing arguments
   if (is_peek_token(parser, RPAREN)) {
     next_token_parser(parser);
-    return;
+    return function_expression;
   }
   next_token_parser(parser);
   expression_t *curr_identifier = parse_identifier(parser);
@@ -559,26 +580,35 @@ void parse_function_parameters(parser_t *parser,
   }
 
   if (!is_peek_token(parser, RPAREN)) {
-    fprintf(stderr, "Expected ), got %s",
-            token_strings[parser->peek_token->type]);
-    return;
+    char *err_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(err_msg, MAX_ERROR_SIZE, "Expected ), got %s",
+             token_strings[parser->peek_token->type]);
+    return NULL;
   }
   next_token_parser(parser);
+  return function_expression;
 }
 
 expression_t *parse_function_expression(parser_t *parser) {
   function_literal_t *function_expression = malloc(sizeof(function_literal_t));
   if (!is_peek_token(parser, LPAREN)) {
-    fprintf(stderr, "Expected ( got %s",
-            token_strings[parser->peek_token->type]);
-    exit(-1);
+    char *err_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(err_msg, MAX_ERROR_SIZE, "Expected ( got %s",
+             token_strings[parser->peek_token->type]);
+    push_errors_parser(parser, err_msg);
+    return NULL;
   }
   next_token_parser(parser);
-  parse_function_parameters(parser, function_expression);
+  function_expression = parse_function_parameters(parser, function_expression);
+  if (function_expression == NULL) {
+    return NULL;
+  }
   if (!is_peek_token(parser, LBRACE)) {
-    fprintf(stderr, "Expected { got %s",
-            token_strings[parser->peek_token->type]);
-    exit(-1);
+    char *err_msg = (char *)malloc(MAX_ERROR_SIZE);
+    snprintf(err_msg, MAX_ERROR_SIZE, "Expected { got %s",
+             token_strings[parser->peek_token->type]);
+    push_errors_parser(parser, err_msg);
+    return NULL;
   }
   next_token_parser(parser);
   function_expression->body =
@@ -594,6 +624,9 @@ expression_t *parse_prefix_expression(parser_t *parser) {
   next_token_parser(parser);
   precedence_t precedence = peek_precedence(parser);
   expression->right = parse_expression(parser, PREFIX);
+  if (expression->right == NULL) {
+    return NULL;
+  }
   expression->expression.node.string = print_prefix_expression_string;
   return (expression_t *)expression;
 }
@@ -610,8 +643,8 @@ void push_to_call_arguments_array(call_expression_t *call_expression,
   call_expression->arguments[call_expression->arguments_length++] = expression;
 }
 
-void parse_call_arguments(call_expression_t *call_expression,
-                          parser_t *parser) {
+expression_t **parse_call_arguments(call_expression_t *call_expression,
+                                    parser_t *parser) {
   // 1. Initialize the arguments array
   call_expression->arguments =
       (expression_t **)calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(expression_t));
@@ -619,18 +652,25 @@ void parse_call_arguments(call_expression_t *call_expression,
   call_expression->arguments_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
   while (!is_curr_token(parser, RPAREN)) {
     expression_t *expression = parse_expression(parser, LOWEST);
+    if (expression == NULL) {
+      return NULL;
+    }
     push_to_call_arguments_array(call_expression, expression);
     if (is_peek_token(parser, RPAREN)) {
       next_token_parser(parser);
       break;
     }
     if (!is_peek_token(parser, COMMA)) {
-      fprintf(stderr, "Expected , got %s",
-              token_strings[parser->curr_token->type]);
+      char *err_msg = (char *)malloc(MAX_ERROR_SIZE);
+      snprintf(err_msg, MAX_ERROR_SIZE, "Expected , got %s",
+               token_strings[parser->curr_token->type]);
+      push_errors_parser(parser, err_msg);
+      return NULL;
     }
     next_token_parser(parser);
     next_token_parser(parser);
   }
+  return call_expression->arguments;
 }
 
 expression_t *parse_call_expression(parser_t *parser, expression_t *left) {
@@ -640,7 +680,10 @@ expression_t *parse_call_expression(parser_t *parser, expression_t *left) {
   expression->expression.type = CALL_EXPRESSION;
   expression->expression.node.string = get_call_expression_string;
   next_token_parser(parser);
-  parse_call_arguments(expression, parser);
+  expression->arguments = parse_call_arguments(expression, parser);
+  if (expression->arguments == NULL) {
+    return NULL;
+  }
 
   return (expression_t *)expression;
 }
@@ -658,6 +701,9 @@ expression_t *parse_infix_function(parser_t *parser, expression_t *left) {
   precedence_t precedence = curr_precedence(parser);
   next_token_parser(parser);
   infix_expression->right = parse_expression(parser, precedence);
+  if (infix_expression->right == NULL) {
+    return NULL;
+  }
   infix_expression->expression.node.string = print_infix_expression_string;
   return (expression_t *)infix_expression;
 }
