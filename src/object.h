@@ -1,9 +1,14 @@
 #pragma once
+typedef struct object_t object_t;
+typedef struct environment_t environment_t;
+
+#include "nodes.h"
 #include <stdbool.h>
 
 typedef enum object_type {
   INTEGER,
   BOOLEAN,
+  FUNCTION_OBJ,
   NULL_OBJ,
   RETURN_VALUE_OBJ,
   ERROR_OBJ
@@ -12,13 +17,13 @@ typedef enum object_type {
 typedef object_type (*Type)();
 typedef char *(*Inspect)(void *);
 
-static char *object_type_strings[] = {"INTEGER", "BOOLEAN", "NULL", "ERROR"};
+static char *object_type_strings[] = {"INTEGER", "BOOLEAN", "FUNCTION", "NULL",
+                                      "ERROR"};
 
 typedef struct object_t {
   Type type;
   Inspect inspect;
 } object_t;
-
 typedef struct integer_obj_t {
   object_t object;
   long long value;
@@ -43,13 +48,24 @@ typedef struct error_obj_t {
   char *message;
 } error_obj_t;
 
+typedef struct function_obj_t {
+  object_t object;
+  expression_t **parameters;
+  size_t parameters_length;
+  size_t parameters_capacity;
+  block_statement_t *body;
+  environment_t *env;
+} function_obj_t;
+
 object_type type_int();
 object_type type_boolean();
+object_type type_function();
 object_type type_null();
 object_type type_return();
 object_type type_error();
 char *inspect_int(void *);
 char *inspect_boolean(void *);
+char *inspect_function(void *);
 char *inspect_null(void *);
 char *inspect_return(void *);
 char *inspect_error(void *);

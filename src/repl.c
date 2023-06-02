@@ -7,8 +7,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+
+void quit(){
+  printf("\nExiting from the repl....\n");
+  exit(0);
+}
 
 int main(void) {
+  signal(SIGINT,quit);
   environment_t *env = new_environment();
   while (1) {
     char user_input[STRING_MAX_SIZE];

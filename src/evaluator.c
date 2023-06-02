@@ -10,6 +10,12 @@ object_t *eval(node_t *, environment_t *);
 object_t *eval_expression(expression_t *, environment_t *);
 object_t *eval_statement(statement_t *, environment_t *);
 
+function_obj_t *create_func_object() {
+  function_obj_t *function_obj =
+      (function_obj_t *)malloc(sizeof(function_obj_t));
+  return function_obj;
+}
+
 error_obj_t *create_error_object() {
   error_obj_t *error_obj = (error_obj_t *)malloc(sizeof(error_obj_t));
   error_obj->object.type = type_error;
@@ -46,6 +52,19 @@ object_t *eval_if_expression(if_expression_t *if_expr, environment_t *env) {
     return eval_alternative;
   }
   return NULL;
+}
+
+function_obj_t *eval_function_expression(function_literal_t *function_literal,
+                                         environment_t *env) {
+  function_obj_t *func_obj = (function_obj_t *)malloc(sizeof(function_obj_t));
+  func_obj->parameters = function_literal->arguments;
+  func_obj->parameters_length = function_literal->arguments_length;
+  func_obj->parameters_capacity = function_literal->arguments_capacity;
+  func_obj->body = function_literal->body;
+  func_obj->env = env;
+  func_obj->object.type = type_function;
+  func_obj->object.inspect = inspect_function;
+  return func_obj;
 }
 
 object_t *eval_infix_expression(infix_expression_t *infix_expr,
@@ -321,7 +340,8 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     return eval_if_expression(if_expression, env);
   }
   case FUNCTION_EXPRESSION: {
-    unimplemented();
+    function_literal_t *func_expression = (function_literal_t *)expression;
+    return (object_t *)eval_function_expression(func_expression, env);
   }
   case CALL_EXPRESSION: {
     unimplemented();
@@ -353,6 +373,7 @@ object_t *eval_statements(statement_t **statements, size_t statements_length,
   }
   return result;
 }
+
 object_t *eval_statement(statement_t *statement, environment_t *env) {
   switch (statement->type) {
   case LET_STATEMENT: {
