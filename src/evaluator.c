@@ -1,3 +1,4 @@
+#include "environment.h"
 #include "nodes.h"
 #include "object.h"
 #include "utils.h"
@@ -5,9 +6,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-object_t *eval(node_t *);
-object_t *eval_expression(expression_t *);
-object_t *eval_statement(statement_t *);
+object_t *eval(node_t *, environment_t *);
+object_t *eval_expression(expression_t *, environment_t *);
+object_t *eval_statement(statement_t *, environment_t *);
 
 error_obj_t *create_error_object() {
   error_obj_t *error_obj = (error_obj_t *)malloc(sizeof(error_obj_t));
@@ -24,33 +25,34 @@ static integer_obj_t *new_integer_obj(long long value) {
   return integer_obj;
 }
 
-object_t *eval_if_expression(if_expression_t *if_expr) {
-  object_t *condition_obj = eval_expression(if_expr->condition);
+object_t *eval_if_expression(if_expression_t *if_expr, environment_t *env) {
+  object_t *condition_obj = eval_expression(if_expr->condition, env);
   if (condition_obj->type() != BOOLEAN) {
     assert("Condition should evaluate to a boolean");
   }
   bool is_condition_true = ((boolean_obj_t *)condition_obj)->value;
 
   if (is_condition_true) {
-    object_t *eval_consequence = eval_statement(if_expr->consequence);
+    object_t *eval_consequence = eval_statement(if_expr->consequence, env);
     return eval_consequence;
   } else {
     if (if_expr->alternative == NULL) {
-      null_obj_t *null_obj = (null_obj_t *)malloc(sizeof(null_obj));
+      null_obj_t *null_obj = (null_obj_t *)malloc(sizeof(null_obj_t));
       null_obj->object.type = type_null;
       null_obj->object.inspect = inspect_null;
       return (object_t *)null_obj;
     }
-    object_t *eval_alternative = eval_statement(if_expr->alternative);
+    object_t *eval_alternative = eval_statement(if_expr->alternative, env);
     return eval_alternative;
   }
   return NULL;
 }
 
-object_t *eval_infix_expression(infix_expression_t *infix_expr) {
+object_t *eval_infix_expression(infix_expression_t *infix_expr,
+                                environment_t *env) {
   if (strcmp(infix_expr->op, "+") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
@@ -67,8 +69,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     return_obj->object.inspect = inspect_int;
     return (object_t *)return_obj;
   } else if (strcmp(infix_expr->op, "-") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
@@ -85,8 +87,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     return_obj->object.inspect = inspect_int;
     return (object_t *)return_obj;
   } else if (strcmp(infix_expr->op, "*") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
@@ -103,8 +105,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     return_obj->object.inspect = inspect_int;
     return (object_t *)return_obj;
   } else if (strcmp(infix_expr->op, "/") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
@@ -121,8 +123,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     return_obj->object.inspect = inspect_int;
     return (object_t *)return_obj;
   } else if (strcmp(infix_expr->op, "==") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     bool are_both_ints =
         left_obj->type() == INTEGER && right_obj->type() == INTEGER;
     bool are_both_bools =
@@ -149,8 +151,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     bool_obj->object.inspect = inspect_boolean;
     return (object_t *)bool_obj;
   } else if (strcmp(infix_expr->op, "!=") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     bool are_both_ints =
         left_obj->type() == INTEGER && right_obj->type() == INTEGER;
     bool are_both_bools =
@@ -177,8 +179,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     bool_obj->object.inspect = inspect_boolean;
     return (object_t *)bool_obj;
   } else if (strcmp(infix_expr->op, ">") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     boolean_obj_t *bool_obj = (boolean_obj_t *)malloc(sizeof(boolean_obj_t));
     bool are_both_ints =
         (left_obj->type() == INTEGER && right_obj->type() == INTEGER);
@@ -195,8 +197,8 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
     bool_obj->object.inspect = inspect_boolean;
     return (object_t *)bool_obj;
   } else if (strcmp(infix_expr->op, "<") == 0) {
-    object_t *left_obj = eval_expression(infix_expr->left);
-    object_t *right_obj = eval_expression(infix_expr->right);
+    object_t *left_obj = eval_expression(infix_expr->left, env);
+    object_t *right_obj = eval_expression(infix_expr->right, env);
     boolean_obj_t *bool_obj = (boolean_obj_t *)malloc(sizeof(boolean_obj_t));
     bool are_both_ints =
         left_obj->type() == INTEGER && right_obj->type() == INTEGER;
@@ -216,8 +218,9 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr) {
   return NULL;
 }
 
-object_t *eval_prefix_expression(prefix_expression_t *prefix_expr) {
-  object_t *right = eval_expression(prefix_expr->right);
+object_t *eval_prefix_expression(prefix_expression_t *prefix_expr,
+                                 environment_t *env) {
+  object_t *right = eval_expression(prefix_expr->right, env);
   if (strcmp(prefix_expr->op, "!") == 0) {
     // TODO: refactor: make into seperate functions
     boolean_obj_t *boolean_obj = (boolean_obj_t *)malloc(sizeof(boolean_obj_t));
@@ -268,7 +271,7 @@ object_t *eval_prefix_expression(prefix_expression_t *prefix_expr) {
   return NULL;
 }
 
-object_t *eval_expression(expression_t *expression) {
+object_t *eval_expression(expression_t *expression, environment_t *env) {
   switch (expression->type) {
   case INTEGER_LITERAL: {
     integer_t *integer_expr = (integer_t *)expression;
@@ -286,6 +289,15 @@ object_t *eval_expression(expression_t *expression) {
       null_obj->object.inspect = inspect_null;
       return (object_t *)null_obj;
     }
+    object_t *val = get_environment(env, identifier->value);
+    if (val == NULL) {
+      error_obj_t *err_obj = create_error_object();
+      err_obj->message = (char *)malloc(STRING_MAX_SIZE);
+      snprintf(err_obj->message, STRING_MAX_SIZE, "Identifier not found: %s",
+               identifier->value);
+      return (object_t *)err_obj;
+    }
+    return val;
   }
   case BOOLEAN_LITERAL: {
     boolean_expression_t *boolean_expression =
@@ -298,15 +310,15 @@ object_t *eval_expression(expression_t *expression) {
   }
   case PREFIX_EXPRESSION: {
     prefix_expression_t *prefix_expr = (prefix_expression_t *)expression;
-    return eval_prefix_expression(prefix_expr);
+    return eval_prefix_expression(prefix_expr, env);
   }
   case INFIX_EXPRESSION: {
     infix_expression_t *infix_expression = (infix_expression_t *)expression;
-    return eval_infix_expression(infix_expression);
+    return eval_infix_expression(infix_expression, env);
   }
   case IF_EXPRESSION: {
     if_expression_t *if_expression = (if_expression_t *)expression;
-    return eval_if_expression(if_expression);
+    return eval_if_expression(if_expression, env);
   }
   case FUNCTION_EXPRESSION: {
     unimplemented();
@@ -318,10 +330,11 @@ object_t *eval_expression(expression_t *expression) {
   return NULL;
 }
 
-object_t *eval_block_statement(block_statement_t *block_statement) {
+object_t *eval_block_statement(block_statement_t *block_statement,
+                               environment_t *env) {
   object_t *result;
   for (int i = 0; i < block_statement->statements_length; ++i) {
-    result = eval_statement(block_statement->statements[i]);
+    result = eval_statement(block_statement->statements[i], env);
     if (result != NULL && result->type() == RETURN_VALUE_OBJ) {
       object_type rt = result->type();
       if (rt == RETURN_VALUE_OBJ || rt == ERROR_OBJ) {
@@ -332,43 +345,53 @@ object_t *eval_block_statement(block_statement_t *block_statement) {
   return result;
 }
 
-object_t *eval_statements(statement_t **statements, size_t statements_length) {
+object_t *eval_statements(statement_t **statements, size_t statements_length,
+                          environment_t *env) {
   object_t *result;
   for (int i = 0; i < statements_length; ++i) {
-    result = eval_statement(statements[i]);
+    result = eval_statement(statements[i], env);
   }
   return result;
 }
-object_t *eval_statement(statement_t *statement) {
+object_t *eval_statement(statement_t *statement, environment_t *env) {
   switch (statement->type) {
   case LET_STATEMENT: {
-    unimplemented();
+    let_statement_t *let_stmt = (let_statement_t *)statement;
+    object_t *val = eval_expression(let_stmt->value, env);
+    if (val->type() == ERROR_OBJ) {
+      return val;
+    }
+    set_environment(env, let_stmt->name->value, val);
+    return NULL;
   }
   case RETURN_STATEMENT: {
     ret_statement_t *ret_stmt = (ret_statement_t *)statement;
     return_obj_t *ret_obj = (return_obj_t *)malloc(sizeof(return_obj_t));
-    ret_obj->value = eval_expression(ret_stmt->return_value);
+    ret_obj->value = eval_expression(ret_stmt->return_value, env);
     ret_obj->object.type = type_return;
     ret_obj->object.inspect = inspect_return;
     return (object_t *)ret_obj;
   }
   case EXPRESSION_STATEMENT: {
     expression_statement_t *expr = (expression_statement_t *)statement;
-    return eval_expression(expr->expression);
+    return eval_expression(expr->expression, env);
   }
   case BLOCK_STATEMENT: {
     block_statement_t *block = (block_statement_t *)statement;
-    return eval_statements(block->statements, block->statements_length);
+    return eval_statements(block->statements, block->statements_length, env);
   }
   }
   return NULL;
 }
 
-object_t *eval_program(program_t *program) {
+object_t *eval_program(program_t *program, environment_t *env) {
   object_t *result;
   for (int i = 0; i < program->statements_length; ++i) {
     statement_t *stmt = program->statements[i];
-    result = eval_statement(stmt);
+    result = eval_statement(stmt, env);
+    if (result == NULL) {
+      return NULL;
+    }
 
     if (result->type() == RETURN_VALUE_OBJ) {
       return ((return_obj_t *)result)->value;
@@ -380,19 +403,19 @@ object_t *eval_program(program_t *program) {
   return result;
 }
 
-object_t *eval(node_t *node) {
+object_t *eval(node_t *node, environment_t *env) {
   switch (node->type) {
   case PROGRAM: {
     program_t *program_node = (program_t *)node;
-    return eval_program(program_node);
+    return eval_program(program_node, env);
   }
   case STATEMENT: {
     statement_t *statement = (statement_t *)node;
-    return eval_statement(statement);
+    return eval_statement(statement, env);
   }
   case EXPRESSION: {
     expression_t *expression = (expression_t *)node;
-    return eval_expression(expression);
+    return eval_expression(expression, env);
   }
   }
   return NULL;
