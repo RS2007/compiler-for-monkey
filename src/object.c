@@ -50,7 +50,7 @@ char *get_fn_body_string(block_statement_t *block_stmt) {
 char *inspect_function(void *function_object_cast_to_void) {
   function_obj_t *func_obj = (function_obj_t *)function_object_cast_to_void;
   char *func_obj_string = (char *)malloc(STRING_MAX_SIZE);
-  snprintf(func_obj_string, STRING_MAX_SIZE, "fn(%s){\n %s }",
+  snprintf(func_obj_string, STRING_MAX_SIZE, "fn(%s){\n %s \n}",
            get_concated_arguments_string(func_obj->parameters,
                                          func_obj->parameters_length),
            get_fn_body_string(func_obj->body));

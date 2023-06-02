@@ -383,7 +383,8 @@ object_t *eval_statement(statement_t *statement, environment_t *env) {
       return val;
     }
     set_environment(env, let_stmt->name->value, val);
-    return NULL;
+    return NULL; // statements are not supposed to evaluate to anything except
+                 // an error
   }
   case RETURN_STATEMENT: {
     ret_statement_t *ret_stmt = (ret_statement_t *)statement;
