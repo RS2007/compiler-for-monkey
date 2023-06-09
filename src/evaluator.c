@@ -4,11 +4,14 @@
 #include "utils.h"
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 object_t *eval(node_t *, environment_t *);
 object_t *eval_expression(expression_t *, environment_t *);
 object_t *eval_statement(statement_t *, environment_t *);
+object_t *eval_statements(statement_t **, size_t, environment_t *);
 
 function_obj_t *create_func_object() {
   function_obj_t *function_obj =
@@ -52,6 +55,63 @@ object_t *eval_if_expression(if_expression_t *if_expr, environment_t *env) {
     return eval_alternative;
   }
   return NULL;
+}
+
+object_t *unwrap_return_value(object_t *obj) {
+  if (obj->type() == RETURN_VALUE_OBJ) {
+    return ((return_obj_t *)obj)->value;
+  }
+  return obj;
+}
+
+void extend_function_env(environment_t *env, object_t **evaluated_expressions,
+                         size_t evaluated_expressions_length,
+                         function_obj_t *function_obj) {
+  env->outer = (environment_t *)malloc(sizeof(environment_t));
+  env->outer->store = create_hash_table();
+  for (int i = 0; i < evaluated_expressions_length; ++i) {
+    insert_hash_table(env->outer->store,
+                      function_obj->parameters[i]->node.string(
+                          (void *)function_obj->parameters[i]),
+                      evaluated_expressions[i]);
+  }
+}
+
+object_t *apply_function(expression_t *function,
+                         object_t **evaluated_expressions,
+                         size_t evaluated_expressions_length,
+                         environment_t *env) {
+  object_t *function_literal = eval_expression(function, env);
+  if (function_literal->type() == ERROR_OBJ) {
+    return function_literal;
+  }
+  function_obj_t *function_typecasted = (function_obj_t *)function_literal;
+  if (function_typecasted->parameters_length != evaluated_expressions_length) {
+    error_obj_t *err = create_error_object();
+    char *err_string = (char *)malloc(STRING_MAX_SIZE);
+    snprintf(
+        err_string, STRING_MAX_SIZE, "Function expected %zu arguments got %zu",
+        function_typecasted->parameters_length, evaluated_expressions_length);
+    return (object_t *)err;
+  }
+  extend_function_env(env, evaluated_expressions, evaluated_expressions_length,
+                      function_typecasted);
+  object_t *evaluated =
+      eval_statements(function_typecasted->body->statements,
+                      function_typecasted->body->statements_length, env);
+  return unwrap_return_value(evaluated);
+}
+
+object_t *eval_call_expression(call_expression_t *call_expression,
+                               environment_t *env) {
+  expression_t *function = call_expression->function;
+  object_t *evaluated_expressions[call_expression->arguments_length];
+  for (int i = 0; i < call_expression->arguments_length; ++i) {
+    evaluated_expressions[i] =
+        eval_expression(call_expression->arguments[i], env);
+  }
+  return apply_function(function, evaluated_expressions,
+                        call_expression->arguments_length, env);
 }
 
 function_obj_t *eval_function_expression(function_literal_t *function_literal,
@@ -344,7 +404,8 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     return (object_t *)eval_function_expression(func_expression, env);
   }
   case CALL_EXPRESSION: {
-    unimplemented();
+    call_expression_t *call_expression = (call_expression_t *)expression;
+    return (object_t *)eval_call_expression(call_expression, env);
   }
   }
   return NULL;

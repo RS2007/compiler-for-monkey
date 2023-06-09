@@ -43,7 +43,7 @@ int main(void) {
     }
     if (object->type((void *)object) == ERROR_OBJ) {
       error_obj_t *error_obj = (error_obj_t *)object;
-      printf("ERROR: %s\n", error_obj->message);
+      printf("Evaluator error: %s\n", error_obj->message);
       continue;
     }
     printf("%s\n", object->inspect((void *)object));

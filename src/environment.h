@@ -4,6 +4,7 @@
 
 typedef struct environment_t {
   hash_table_t *store;
+  environment_t *outer;
 } environment_t;
 
 environment_t *new_environment();
