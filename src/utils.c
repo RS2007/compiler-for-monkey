@@ -36,6 +36,7 @@ hash_table_t *create_hash_table() {
 bool insert_hash_table(hash_table_t *hash_table, char *key, object_t *value) {
   uint32_t hash_value = hash_string(key);
   hash_table->items[hash_value] = value;
+  hash_table->length++;
   return true;
 }
 

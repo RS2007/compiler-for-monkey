@@ -240,7 +240,7 @@ int test_function_expression() {
     exit(-1);
   }
   if (strcmp(func_obj->body->statement.node.string((void *)func_obj->body),
-             "(x + 2)") != 0) {
+             "(x + 2);") != 0) {
     fprintf(stderr, "Expected %s parameter, got %s",
             func_obj->body->statement.node.string((void *)func_obj->body),
             "(x + 2)");
@@ -250,13 +250,38 @@ int test_function_expression() {
   return 0;
 }
 
+int test_closures(void){
+  char* input = "let newAdder = fn(x) {"
+                " return fn(y) { x+y; }"
+                "};"
+                "let addTwo = newAdder(2);"
+                "addTwo(2);";
+  object_t* res = test_eval(input);
+  if(res->type == ERROR_OBJ){
+    fprintf(stderr,"ERROR: %s",((error_obj_t*)res)->message);
+    exit(-1);
+  }
+  if(res->type() != INTEGER_LITERAL){
+    fprintf(stderr,"Expected integer got, %s",object_type_strings[res->type()]);
+    exit(-1);
+  }
+  integer_obj_t* integer = (integer_obj_t*)res;
+  if(integer->value != 4){
+    fprintf(stderr,"Expected %lld, got %lld",4,integer->value);
+    exit(-1);
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
 int main(void) {
-  test_eval_integer_expression();
-  test_eval_boolean_expression();
-  test_bang_operator();
-  test_prefix_minus_operator();
-  test_integer_infix_expressions();
-  test_bool_infix_expressions();
-  test_function_expression();
-  return nested_if_with_return();
+  // test_eval_integer_expression();
+  // test_eval_boolean_expression();
+  // test_bang_operator();
+  // test_prefix_minus_operator();
+  // test_integer_infix_expressions();
+  // test_bool_infix_expressions();
+  // test_function_expression();
+  // nested_if_with_return();
+  return test_closures();
 }

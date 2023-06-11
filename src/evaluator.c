@@ -83,7 +83,7 @@ object_t *apply_function(expression_t *function,
                          environment_t *env) {
   object_t *function_literal = eval_expression(function, env);
   if (function_literal->type() == ERROR_OBJ) {
-    return function_literal;
+    return (object_t*)function_literal;
   }
   function_obj_t *function_typecasted = (function_obj_t *)function_literal;
   if (function_typecasted->parameters_length != evaluated_expressions_length) {
@@ -133,6 +133,12 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr,
     object_t *left_obj = eval_expression(infix_expr->left, env);
     object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
+      if(left_obj->type() == ERROR_OBJ){
+        return (object_t*)left_obj;
+      }
+      if(right_obj->type() == ERROR_OBJ){
+        return (object_t*)right_obj;
+      }
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
       snprintf(error_string, STRING_MAX_SIZE,
@@ -435,6 +441,13 @@ object_t *eval_statements(statement_t **statements, size_t statements_length,
   return result;
 }
 
+null_obj_t* create_null_obj(){
+  null_obj_t* null = (null_obj_t*)malloc(sizeof(null_obj_t));
+  null->object.type = type_null;
+  null->object.inspect = inspect_null;
+  return null;
+}
+
 object_t *eval_statement(statement_t *statement, environment_t *env) {
   switch (statement->type) {
   case LET_STATEMENT: {
@@ -444,8 +457,7 @@ object_t *eval_statement(statement_t *statement, environment_t *env) {
       return val;
     }
     set_environment(env, let_stmt->name->value, val);
-    return NULL; // statements are not supposed to evaluate to anything except
-                 // an error
+    return (object_t*)create_null_obj(); //FIXME: hack to avoid early returns during function calls
   }
   case RETURN_STATEMENT: {
     ret_statement_t *ret_stmt = (ret_statement_t *)statement;
@@ -472,18 +484,14 @@ object_t *eval_program(program_t *program, environment_t *env) {
   for (int i = 0; i < program->statements_length; ++i) {
     statement_t *stmt = program->statements[i];
     result = eval_statement(stmt, env);
-    if (result == NULL) {
-      return NULL;
-    }
-
-    if (result->type() == RETURN_VALUE_OBJ) {
-      return ((return_obj_t *)result)->value;
+    if(result->type() == RETURN_VALUE_OBJ){
+      return unwrap_return_value(result);
     }
     if (result->type() == ERROR_OBJ) {
       return result;
     }
   }
-  return result;
+  return unwrap_return_value(result);
 }
 
 object_t *eval(node_t *node, environment_t *env) {

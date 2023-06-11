@@ -488,7 +488,7 @@ statement_t *parse_block_statement(parser_t *parser) {
 
   next_token_parser(parser);
   // actual parsing
-  if (!is_curr_token(parser, RBRACE) && !is_curr_token(parser, END_OF_FILE)) {
+  while (!is_curr_token(parser, RBRACE) && !is_curr_token(parser, END_OF_FILE)) {
     statement_t *statement = parse_statement(parser);
     if (statement != NULL) {
       push_statements_block_statement(block_statement, statement);
