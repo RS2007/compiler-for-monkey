@@ -9,10 +9,11 @@ environment_t *new_environment() {
 
 object_t *get_environment(environment_t *environment, char *key) {
   object_t *value;
-  if ((value = get_value_hash_table(environment->store, key)) == NULL &&
+  value = get_value_hash_table(environment->store,key);
+  if (value == NULL &&
       environment->outer != NULL) {
 
-    return get_value_hash_table(environment->outer->store, key);
+    return get_environment(environment->outer, key);
   };
   return value;
 }

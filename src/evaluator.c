@@ -64,17 +64,19 @@ object_t *unwrap_return_value(object_t *obj) {
   return obj;
 }
 
-void extend_function_env(environment_t *env, object_t **evaluated_expressions,
+environment_t* extend_function_env(environment_t *env, object_t **evaluated_expressions,
                          size_t evaluated_expressions_length,
                          function_obj_t *function_obj) {
-  env->outer = (environment_t *)malloc(sizeof(environment_t));
-  env->outer->store = create_hash_table();
+  environment_t* new_env = (environment_t*)malloc(sizeof(environment_t));                          
+  new_env->outer = env;
+  new_env->store = create_hash_table();
   for (int i = 0; i < evaluated_expressions_length; ++i) {
-    insert_hash_table(env->outer->store,
+    insert_hash_table(new_env->store,
                       function_obj->parameters[i]->node.string(
                           (void *)function_obj->parameters[i]),
                       evaluated_expressions[i]);
   }
+  return new_env;
 }
 
 object_t *apply_function(expression_t *function,
@@ -94,11 +96,11 @@ object_t *apply_function(expression_t *function,
         function_typecasted->parameters_length, evaluated_expressions_length);
     return (object_t *)err;
   }
-  extend_function_env(env, evaluated_expressions, evaluated_expressions_length,
+  environment_t* extended_environment = extend_function_env(env, evaluated_expressions, evaluated_expressions_length,
                       function_typecasted);
   object_t *evaluated =
       eval_statements(function_typecasted->body->statements,
-                      function_typecasted->body->statements_length, env);
+                      function_typecasted->body->statements_length, extended_environment);
   return unwrap_return_value(evaluated);
 }
 
@@ -437,6 +439,9 @@ object_t *eval_statements(statement_t **statements, size_t statements_length,
   object_t *result;
   for (int i = 0; i < statements_length; ++i) {
     result = eval_statement(statements[i], env);
+    if(result->type() == RETURN_VALUE_OBJ){
+      return result;
+    }
   }
   return result;
 }

@@ -23,7 +23,7 @@ int main(void) {
     printf(">>");
     fgets(user_input, STRING_MAX_SIZE, stdin);
     if (strcmp(user_input, "quit\n") == 0) {
-      return 0;
+      quit();
     }
     lexer_t *lexer = new_lexer(user_input, strlen(user_input));
     parser_t *parser = new_parser(lexer);
