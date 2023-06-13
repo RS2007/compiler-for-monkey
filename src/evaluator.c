@@ -67,14 +67,11 @@ object_t *unwrap_return_value(object_t *obj) {
 environment_t* extend_function_env(environment_t *env, object_t **evaluated_expressions,
                          size_t evaluated_expressions_length,
                          function_obj_t *function_obj) {
-  environment_t* new_env = (environment_t*)malloc(sizeof(environment_t));                          
+  environment_t* new_env = new_environment();                          
   new_env->outer = env;
-  new_env->store = create_hash_table();
   for (int i = 0; i < evaluated_expressions_length; ++i) {
-    insert_hash_table(new_env->store,
-                      function_obj->parameters[i]->node.string(
-                          (void *)function_obj->parameters[i]),
-                      evaluated_expressions[i]);
+    identifier_t* evaluated_expr = (identifier_t*)function_obj->parameters[i];
+    set_environment(new_env,evaluated_expr->value,evaluated_expressions[i]);
   }
   return new_env;
 }
@@ -96,7 +93,7 @@ object_t *apply_function(expression_t *function,
         function_typecasted->parameters_length, evaluated_expressions_length);
     return (object_t *)err;
   }
-  environment_t* extended_environment = extend_function_env(env, evaluated_expressions, evaluated_expressions_length,
+  environment_t* extended_environment = extend_function_env(function_typecasted->env, evaluated_expressions, evaluated_expressions_length,
                       function_typecasted);
   object_t *evaluated =
       eval_statements(function_typecasted->body->statements,
