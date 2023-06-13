@@ -275,13 +275,13 @@ int test_closures(void){
 }
 
 int main(void) {
-  // test_eval_integer_expression();
-  // test_eval_boolean_expression();
-  // test_bang_operator();
-  // test_prefix_minus_operator();
-  // test_integer_infix_expressions();
-  // test_bool_infix_expressions();
-  // test_function_expression();
-  // nested_if_with_return();
+  test_eval_integer_expression();
+  test_eval_boolean_expression();
+  test_bang_operator();
+  test_prefix_minus_operator();
+  test_integer_infix_expressions();
+  test_bool_infix_expressions();
+  test_function_expression();
+  nested_if_with_return();
   return test_closures();
 }
