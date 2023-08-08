@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "object.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,13 +31,16 @@ hash_table_t *create_hash_table() {
   hash_table->capacity = HASH_TABLE_SIZE;
   hash_item_t **associative_array =
       (hash_item_t **)calloc(HASH_TABLE_SIZE, sizeof(hash_item_t));
+  for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+    associative_array[i] = NULL;
+  }
   hash_table->items = associative_array;
   return hash_table;
 }
 
 bool insert_hash_table(hash_table_t *hash_table, char *key, object_t *value) {
   uint32_t hash_value = hash_string(key);
-  hash_item_t* hash_item = (hash_item_t*)malloc(sizeof(hash_item_t));
+  hash_item_t *hash_item = (hash_item_t *)malloc(sizeof(hash_item_t));
   hash_item->key = hash_value;
   hash_item->value = value;
   hash_table->items[hash_value] = hash_item;
@@ -44,7 +48,19 @@ bool insert_hash_table(hash_table_t *hash_table, char *key, object_t *value) {
   return true;
 }
 
+void free_hash_table(hash_table_t *hash_table) {
+  for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+    if (hash_table->items[i] != NULL) {
+      FREE(hash_table->items[i]->key);
+      free_object(hash_table->items[i]->value);
+    }
+  }
+  FREE(hash_table);
+}
+
 object_t *get_value_hash_table(hash_table_t *hash_table, char *key) {
   uint32_t hash_value = hash_string(key);
-  return hash_table->items[hash_value] == NULL ? hash_table->items[hash_value]: hash_table->items[hash_value]->value;
+  return hash_table->items[hash_value] == NULL
+             ? hash_table->items[hash_value]
+             : hash_table->items[hash_value]->value;
 }

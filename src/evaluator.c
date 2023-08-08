@@ -64,14 +64,15 @@ object_t *unwrap_return_value(object_t *obj) {
   return obj;
 }
 
-environment_t* extend_function_env(environment_t *env, object_t **evaluated_expressions,
-                         size_t evaluated_expressions_length,
-                         function_obj_t *function_obj) {
-  environment_t* new_env = new_environment();                          
+environment_t *extend_function_env(environment_t *env,
+                                   object_t **evaluated_expressions,
+                                   size_t evaluated_expressions_length,
+                                   function_obj_t *function_obj) {
+  environment_t *new_env = new_environment();
   new_env->outer = env;
   for (int i = 0; i < evaluated_expressions_length; ++i) {
-    identifier_t* evaluated_expr = (identifier_t*)function_obj->parameters[i];
-    set_environment(new_env,evaluated_expr->value,evaluated_expressions[i]);
+    identifier_t *evaluated_expr = (identifier_t *)function_obj->parameters[i];
+    set_environment(new_env, evaluated_expr->value, evaluated_expressions[i]);
   }
   return new_env;
 }
@@ -82,7 +83,7 @@ object_t *apply_function(expression_t *function,
                          environment_t *env) {
   object_t *function_literal = eval_expression(function, env);
   if (function_literal->type() == ERROR_OBJ) {
-    return (object_t*)function_literal;
+    return (object_t *)function_literal;
   }
   function_obj_t *function_typecasted = (function_obj_t *)function_literal;
   if (function_typecasted->parameters_length != evaluated_expressions_length) {
@@ -93,11 +94,12 @@ object_t *apply_function(expression_t *function,
         function_typecasted->parameters_length, evaluated_expressions_length);
     return (object_t *)err;
   }
-  environment_t* extended_environment = extend_function_env(function_typecasted->env, evaluated_expressions, evaluated_expressions_length,
-                      function_typecasted);
-  object_t *evaluated =
-      eval_statements(function_typecasted->body->statements,
-                      function_typecasted->body->statements_length, extended_environment);
+  environment_t *extended_environment =
+      extend_function_env(function_typecasted->env, evaluated_expressions,
+                          evaluated_expressions_length, function_typecasted);
+  object_t *evaluated = eval_statements(
+      function_typecasted->body->statements,
+      function_typecasted->body->statements_length, extended_environment);
   return unwrap_return_value(evaluated);
 }
 
@@ -132,11 +134,11 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr,
     object_t *left_obj = eval_expression(infix_expr->left, env);
     object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
-      if(left_obj->type() == ERROR_OBJ){
-        return (object_t*)left_obj;
+      if (left_obj->type() == ERROR_OBJ) {
+        return (object_t *)left_obj;
       }
-      if(right_obj->type() == ERROR_OBJ){
-        return (object_t*)right_obj;
+      if (right_obj->type() == ERROR_OBJ) {
+        return (object_t *)right_obj;
       }
       error_obj_t *error_obj = create_error_object();
       char *error_string = (char *)malloc(STRING_MAX_SIZE);
@@ -436,15 +438,15 @@ object_t *eval_statements(statement_t **statements, size_t statements_length,
   object_t *result;
   for (int i = 0; i < statements_length; ++i) {
     result = eval_statement(statements[i], env);
-    if(result->type() == RETURN_VALUE_OBJ){
+    if (result->type() == RETURN_VALUE_OBJ) {
       return result;
     }
   }
   return result;
 }
 
-null_obj_t* create_null_obj(){
-  null_obj_t* null = (null_obj_t*)malloc(sizeof(null_obj_t));
+null_obj_t *create_null_obj() {
+  null_obj_t *null = (null_obj_t *)malloc(sizeof(null_obj_t));
   null->object.type = type_null;
   null->object.inspect = inspect_null;
   return null;
@@ -459,7 +461,8 @@ object_t *eval_statement(statement_t *statement, environment_t *env) {
       return val;
     }
     set_environment(env, let_stmt->name->value, val);
-    return (object_t*)create_null_obj(); //FIXME: hack to avoid early returns during function calls
+    return (object_t *)create_null_obj(); // FIXME: hack to avoid early returns
+                                          // during function calls
   }
   case RETURN_STATEMENT: {
     ret_statement_t *ret_stmt = (ret_statement_t *)statement;
@@ -486,7 +489,7 @@ object_t *eval_program(program_t *program, environment_t *env) {
   for (int i = 0; i < program->statements_length; ++i) {
     statement_t *stmt = program->statements[i];
     result = eval_statement(stmt, env);
-    if(result->type() == RETURN_VALUE_OBJ){
+    if (result->type() == RETURN_VALUE_OBJ) {
       return unwrap_return_value(result);
     }
     if (result->type() == ERROR_OBJ) {
@@ -496,20 +499,34 @@ object_t *eval_program(program_t *program, environment_t *env) {
   return unwrap_return_value(result);
 }
 
+void free_program_node(program_t *program_node) {
+  for (int i = 0; i < program_node->statements_length; ++i) {
+    free_statement(program_node->statements[i]);
+  }
+  FREE(program_node);
+}
+
 object_t *eval(node_t *node, environment_t *env) {
+  object_t *return_obj = NULL;
   switch (node->type) {
   case PROGRAM: {
     program_t *program_node = (program_t *)node;
-    return eval_program(program_node, env);
+    return_obj = eval_program(program_node, env);
+    free_program_node(program_node);
+    break;
   }
   case STATEMENT: {
     statement_t *statement = (statement_t *)node;
-    return eval_statement(statement, env);
+    return_obj = eval_statement(statement, env);
+    free_statement(statement);
+    break;
   }
   case EXPRESSION: {
     expression_t *expression = (expression_t *)node;
-    return eval_expression(expression, env);
+    return_obj = eval_expression(expression, env);
+    free_expression(expression);
+    break;
   }
   }
-  return NULL;
+  return return_obj;
 }

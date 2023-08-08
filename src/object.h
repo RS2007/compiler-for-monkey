@@ -23,6 +23,7 @@ static char *object_type_strings[] = {"INTEGER", "BOOLEAN", "FUNCTION", "NULL",
 typedef struct object_t {
   Type type;
   Inspect inspect;
+  size_t refcount;
 } object_t;
 typedef struct integer_obj_t {
   object_t object;
@@ -69,3 +70,6 @@ char *inspect_function(void *);
 char *inspect_null(void *);
 char *inspect_return(void *);
 char *inspect_error(void *);
+void free_object(object_t *);
+void free_statement(statement_t *);
+void free_expression(expression_t *);

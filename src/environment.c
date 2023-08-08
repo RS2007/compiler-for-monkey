@@ -9,9 +9,8 @@ environment_t *new_environment() {
 
 object_t *get_environment(environment_t *environment, char *key) {
   object_t *value;
-  value = get_value_hash_table(environment->store,key);
-  if (value == NULL &&
-      environment->outer != NULL) {
+  value = get_value_hash_table(environment->store, key);
+  if (value == NULL && environment->outer != NULL) {
 
     return get_environment(environment->outer, key);
   };
@@ -21,5 +20,6 @@ object_t *get_environment(environment_t *environment, char *key) {
 object_t *set_environment(environment_t *environment, char *key,
                           object_t *value) {
   insert_hash_table(environment->store, key, value);
+  value->refcount++;
   return value;
 }
