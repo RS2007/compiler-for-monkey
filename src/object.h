@@ -71,3 +71,5 @@ char *inspect_null(void *);
 char *inspect_return(void *);
 char *inspect_error(void *);
 void free_object(object_t *);
+void free_statement(statement_t *);
+void free_expression(expression_t *);

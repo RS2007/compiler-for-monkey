@@ -102,12 +102,14 @@ void free_statement(statement_t *statement) {
     free_identifier(let_stmt->name);
     FREE(let_stmt->token);
     FREE(let_stmt);
+    break;
   }
   case RETURN_STATEMENT: {
     ret_statement_t *ret_stmt = (ret_statement_t *)statement;
     free_expression(ret_stmt->return_value);
     FREE(ret_stmt->token);
     FREE(ret_stmt);
+    break;
   }
   case EXPRESSION_STATEMENT: {
     expression_statement_t *expr_statement =
@@ -115,10 +117,12 @@ void free_statement(statement_t *statement) {
     free_expression(expr_statement->expression);
     FREE(expr_statement->token);
     FREE(expr_statement);
+    break;
   }
   case BLOCK_STATEMENT: {
     block_statement_t *blk_statement = (block_statement_t *)statement;
     free_block_statement(blk_statement);
+    break;
   }
   }
 }
@@ -132,22 +136,29 @@ void free_block_statement(block_statement_t *statement) {
 }
 
 void free_expression(expression_t *expression) {
+  if (expression == NULL)
+    return;
   switch (expression->type) {
   case INTEGER_LITERAL: {
     integer_t *integer = (integer_t *)expression;
     FREE(integer->token);
+    if (integer == NULL)
+      assert("This is wrong");
     FREE(integer);
+    break;
   }
   case IDENTIFIER: {
     identifier_t *identifier = (identifier_t *)expression;
     FREE(identifier->token);
     FREE(identifier->value);
     FREE(identifier);
+    break;
   }
   case BOOLEAN_LITERAL: {
     boolean_expression_t *boolean = (boolean_expression_t *)expression;
     FREE(boolean->token);
     FREE(boolean);
+    break;
   }
   case PREFIX_EXPRESSION: {
     prefix_expression_t *prefix_expr = (prefix_expression_t *)expression;
@@ -155,6 +166,7 @@ void free_expression(expression_t *expression) {
     free_expression(prefix_expr->right);
     FREE(prefix_expr->op);
     FREE(prefix_expr);
+    break;
   }
   case INFIX_EXPRESSION: {
     infix_expression_t *infix_expr = (infix_expression_t *)expression;
@@ -163,6 +175,7 @@ void free_expression(expression_t *expression) {
     free_expression(infix_expr->right);
     FREE(infix_expr->op);
     FREE(infix_expr);
+    break;
   }
   case IF_EXPRESSION: {
     if_expression_t *if_expr = (if_expression_t *)expression;
@@ -170,11 +183,13 @@ void free_expression(expression_t *expression) {
     free_expression(if_expr->condition);
     free_block_statement(if_expr->consequence);
     free_block_statement(if_expr->alternative);
+    break;
   }
   case FUNCTION_EXPRESSION: {
     function_literal_t *func_literal = (function_literal_t *)expression;
     FREE(func_literal->token);
     free_expression(func_literal->function);
+    break;
   }
   case CALL_EXPRESSION: {
   }
@@ -214,28 +229,34 @@ void free_object(object_t *object) {
   case INTEGER: {
     integer_obj_t *integer_object = (integer_obj_t *)object;
     FREE(integer_object);
+    break;
   }
   case BOOLEAN: {
     boolean_obj_t *boolean_object = (boolean_obj_t *)object;
     FREE(boolean_object);
+    break;
   }
   case FUNCTION_OBJ: {
     function_obj_t *function_object = (function_obj_t *)object;
     free_function_obj(function_object);
+    break;
   }
   case NULL_OBJ: {
     null_obj_t *null_object = (null_obj_t *)object;
     FREE(null_object);
+    break;
   }
   case RETURN_VALUE_OBJ: {
     return_obj_t *ret_object = (return_obj_t *)object;
     free_object(ret_object->value);
     FREE(ret_object);
+    break;
   }
   case ERROR_OBJ: {
     error_obj_t *error_obj = (error_obj_t *)object;
     FREE(error_obj->message);
     FREE(error_obj);
+    break;
   }
   }
 }

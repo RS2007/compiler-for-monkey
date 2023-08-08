@@ -13,7 +13,9 @@ bool is_number(char *);
 
 #define FREE(ptr)                                                              \
   do {                                                                         \
-    free((ptr));                                                               \
+    if (ptr != NULL) {                                                         \
+      free(ptr);                                                               \
+    }                                                                          \
     (ptr) = NULL;                                                              \
   } while (0)
 

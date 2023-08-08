@@ -499,20 +499,34 @@ object_t *eval_program(program_t *program, environment_t *env) {
   return unwrap_return_value(result);
 }
 
+void free_program_node(program_t *program_node) {
+  for (int i = 0; i < program_node->statements_length; ++i) {
+    free_statement(program_node->statements[i]);
+  }
+  FREE(program_node);
+}
+
 object_t *eval(node_t *node, environment_t *env) {
+  object_t *return_obj = NULL;
   switch (node->type) {
   case PROGRAM: {
     program_t *program_node = (program_t *)node;
-    return eval_program(program_node, env);
+    return_obj = eval_program(program_node, env);
+    free_program_node(program_node);
+    break;
   }
   case STATEMENT: {
     statement_t *statement = (statement_t *)node;
-    return eval_statement(statement, env);
+    return_obj = eval_statement(statement, env);
+    free_statement(statement);
+    break;
   }
   case EXPRESSION: {
     expression_t *expression = (expression_t *)node;
-    return eval_expression(expression, env);
+    return_obj = eval_expression(expression, env);
+    free_expression(expression);
+    break;
   }
   }
-  return NULL;
+  return return_obj;
 }
