@@ -1,9 +1,14 @@
 #include "object.h"
+#include "environment.h"
 #include "nodes.h"
 #include "parser.h"
 #include "utils.h"
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
+
+void free_expression(expression_t *);
+void free_block_statement(block_statement_t *);
 
 char *inspect_int(void *int_object_cast_to_void) {
   integer_obj_t *int_object = (integer_obj_t *)int_object_cast_to_void;
@@ -82,3 +87,155 @@ char *inspect_error(void *error_obj_cast_to_void) {
 }
 
 object_type type_error() { return ERROR_OBJ; }
+
+void free_identifier(identifier_t *identifier) {
+  FREE(identifier->value);
+  FREE(identifier->token);
+  FREE(identifier);
+}
+
+void free_statement(statement_t *statement) {
+  switch (statement->type) {
+  case LET_STATEMENT: {
+    let_statement_t *let_stmt = (let_statement_t *)statement;
+    free_expression(let_stmt->value);
+    free_identifier(let_stmt->name);
+    FREE(let_stmt->token);
+    FREE(let_stmt);
+  }
+  case RETURN_STATEMENT: {
+    ret_statement_t *ret_stmt = (ret_statement_t *)statement;
+    free_expression(ret_stmt->return_value);
+    FREE(ret_stmt->token);
+    FREE(ret_stmt);
+  }
+  case EXPRESSION_STATEMENT: {
+    expression_statement_t *expr_statement =
+        (expression_statement_t *)statement;
+    free_expression(expr_statement->expression);
+    FREE(expr_statement->token);
+    FREE(expr_statement);
+  }
+  case BLOCK_STATEMENT: {
+    block_statement_t *blk_statement = (block_statement_t *)statement;
+    free_block_statement(blk_statement);
+  }
+  }
+}
+
+void free_block_statement(block_statement_t *statement) {
+  for (int i = 0; i < statement->statements_length; ++i) {
+    free_statement(statement->statements[i]);
+  }
+  FREE(statement->token);
+  FREE(statement);
+}
+
+void free_expression(expression_t *expression) {
+  switch (expression->type) {
+  case INTEGER_LITERAL: {
+    integer_t *integer = (integer_t *)expression;
+    FREE(integer->token);
+    FREE(integer);
+  }
+  case IDENTIFIER: {
+    identifier_t *identifier = (identifier_t *)expression;
+    FREE(identifier->token);
+    FREE(identifier->value);
+    FREE(identifier);
+  }
+  case BOOLEAN_LITERAL: {
+    boolean_expression_t *boolean = (boolean_expression_t *)expression;
+    FREE(boolean->token);
+    FREE(boolean);
+  }
+  case PREFIX_EXPRESSION: {
+    prefix_expression_t *prefix_expr = (prefix_expression_t *)expression;
+    FREE(prefix_expr->token);
+    free_expression(prefix_expr->right);
+    FREE(prefix_expr->op);
+    FREE(prefix_expr);
+  }
+  case INFIX_EXPRESSION: {
+    infix_expression_t *infix_expr = (infix_expression_t *)expression;
+    FREE(infix_expr->token);
+    free_expression(infix_expr->left);
+    free_expression(infix_expr->right);
+    FREE(infix_expr->op);
+    FREE(infix_expr);
+  }
+  case IF_EXPRESSION: {
+    if_expression_t *if_expr = (if_expression_t *)expression;
+    FREE(if_expr->token);
+    free_expression(if_expr->condition);
+    free_block_statement(if_expr->consequence);
+    free_block_statement(if_expr->alternative);
+  }
+  case FUNCTION_EXPRESSION: {
+    function_literal_t *func_literal = (function_literal_t *)expression;
+    FREE(func_literal->token);
+    free_expression(func_literal->function);
+  }
+  case CALL_EXPRESSION: {
+  }
+  }
+}
+
+void free_function_parameters(expression_t **parameters,
+                              unsigned int parameters_length) {
+  for (int i = 0; i < parameters_length; ++i) {
+    free_expression(parameters[i]);
+  }
+}
+
+void free_function_body(block_statement_t *body) { free_block_statement(body); }
+
+void free_environment(environment_t *env) {
+  if (env->outer != NULL) {
+    free_environment(env->outer);
+  }
+  FREE(env->outer);
+  free_hash_table(env->store);
+}
+
+void free_function_obj(function_obj_t *function_object) {
+  free_function_parameters(function_object->parameters,
+                           function_object->parameters_length);
+  free_function_body(function_object->body);
+  free_environment(function_object->env);
+  FREE(function_object);
+}
+
+void free_object(object_t *object) {
+  if (--object->refcount > 0) {
+    return;
+  }
+  switch (object->type()) {
+  case INTEGER: {
+    integer_obj_t *integer_object = (integer_obj_t *)object;
+    FREE(integer_object);
+  }
+  case BOOLEAN: {
+    boolean_obj_t *boolean_object = (boolean_obj_t *)object;
+    FREE(boolean_object);
+  }
+  case FUNCTION_OBJ: {
+    function_obj_t *function_object = (function_obj_t *)object;
+    free_function_obj(function_object);
+  }
+  case NULL_OBJ: {
+    null_obj_t *null_object = (null_obj_t *)object;
+    FREE(null_object);
+  }
+  case RETURN_VALUE_OBJ: {
+    return_obj_t *ret_object = (return_obj_t *)object;
+    free_object(ret_object->value);
+    FREE(ret_object);
+  }
+  case ERROR_OBJ: {
+    error_obj_t *error_obj = (error_obj_t *)object;
+    FREE(error_obj->message);
+    FREE(error_obj);
+  }
+  }
+}

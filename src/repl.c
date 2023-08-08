@@ -47,5 +47,6 @@ int main(void) {
       continue;
     }
     printf("%s\n", object->inspect((void *)object));
+    free_object(object);
   }
 }
