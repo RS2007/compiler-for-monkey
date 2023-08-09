@@ -48,6 +48,8 @@ int main(void) {
     }
     printf("%s\n", object->inspect((void *)object));
     free_object(object);
+    free_lexer(lexer);
+    free_parser(parser);
     for (int i = 0; i < STRING_MAX_SIZE; ++i) {
       user_input[i] = '\0';
     }

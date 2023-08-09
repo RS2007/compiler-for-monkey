@@ -167,3 +167,8 @@ token_t *next_token_lexer(lexer_t *lexer) {
   }
   return token;
 }
+
+void free_lexer(lexer_t *lexer) {
+  FREE(lexer->input);
+  FREE(lexer);
+}

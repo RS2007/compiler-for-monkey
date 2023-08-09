@@ -725,3 +725,16 @@ program_t *parse_program(parser_t *parser) {
   }
   return program_node;
 }
+
+void free_parser_errors(char **errors, size_t errors_size) {
+  for (int i = 0; i < errors_size; ++i) {
+    FREE(errors[i]);
+  }
+}
+
+void free_parser(parser_t *parser) {
+  FREE(parser->curr_token);
+  FREE(parser->peek_token);
+  free_parser_errors(parser->errors, parser->errors_size);
+  FREE(parser);
+}

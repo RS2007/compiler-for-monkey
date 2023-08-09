@@ -16,3 +16,4 @@ parser_t *new_parser(lexer_t *);
 void next_token_parser(parser_t *);
 program_t *parse_program(parser_t *);
 program_t *new_program_node();
+void free_parser(parser_t *parser);
