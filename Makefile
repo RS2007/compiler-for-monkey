@@ -1,6 +1,6 @@
 CC = clang-13
 DEBUGGER = gdb
-C_FLAGS = -Wall -g
+C_FLAGS = -Wall -g -ggdb3 -pedantic
 SRC_FOLDER = ./src
 TEST_FOLDER = ./tests
 BIN_FOLDER = ./bin
