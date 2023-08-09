@@ -14,7 +14,7 @@ void quit() {
   exit(0);
 }
 
-int main(void) {
+void repl() {
   signal(SIGINT, quit);
   environment_t *env = new_environment();
   while (1) {
