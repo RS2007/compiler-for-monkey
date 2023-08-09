@@ -210,6 +210,11 @@ void free_environment(environment_t *env) {
     free_environment(env->outer);
   }
   FREE(env->outer);
+  for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+    if (env->store->items[i] != NULL) {
+      env->store->items[i]->value->refcount--;
+    }
+  }
   free_hash_table(env->store);
 }
 
@@ -222,7 +227,7 @@ void free_function_obj(function_obj_t *function_object) {
 }
 
 void free_object(object_t *object) {
-  if (--object->refcount > 0) {
+  if (object->refcount > 0) {
     return;
   }
   switch (object->type()) {

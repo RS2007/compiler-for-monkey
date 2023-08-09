@@ -303,6 +303,7 @@ expression_t *parse_expression(parser_t *parser, precedence_t precedence) {
 statement_t *parse_let_statement(parser_t *parser) {
   let_statement_t *stmt = (let_statement_t *)malloc(sizeof(let_statement_t));
   // 1. token info
+  stmt->statement.type = LET_STATEMENT;
   stmt->token = parser->curr_token;
   stmt->statement.node.token_literal = let_token_literal;
   stmt->statement.node.string = print_let_string;
