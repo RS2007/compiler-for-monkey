@@ -11,14 +11,15 @@ typedef enum object_type {
   FUNCTION_OBJ,
   NULL_OBJ,
   RETURN_VALUE_OBJ,
-  ERROR_OBJ
+  ERROR_OBJ,
+  STRING_OBJ,
 } object_type;
 
 typedef object_type (*Type)();
 typedef char *(*Inspect)(void *);
 
 static char *object_type_strings[] = {"INTEGER", "BOOLEAN", "FUNCTION", "NULL",
-                                      "ERROR"};
+                                      "RETURN",  "ERROR",   "STRING"};
 
 typedef struct object_t {
   Type type;
@@ -58,18 +59,25 @@ typedef struct function_obj_t {
   environment_t *env;
 } function_obj_t;
 
+typedef struct string_obj_t {
+  object_t object;
+  char *value;
+} string_obj_t;
+
 object_type type_int();
 object_type type_boolean();
 object_type type_function();
 object_type type_null();
 object_type type_return();
 object_type type_error();
+object_type type_string();
 char *inspect_int(void *);
 char *inspect_boolean(void *);
 char *inspect_function(void *);
 char *inspect_null(void *);
 char *inspect_return(void *);
 char *inspect_error(void *);
+char *inspect_string(void *);
 void free_object(object_t *);
 void free_statement(statement_t *);
 void free_expression(expression_t *);

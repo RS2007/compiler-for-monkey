@@ -1,6 +1,6 @@
 # Current progress
 
-- Function interpreter with support for function calls,operator precedence, closures and higher order functions
+- Functional interpreter with support for function calls,operator precedence, closures and higher order functions
 
 ## Demonstration
 

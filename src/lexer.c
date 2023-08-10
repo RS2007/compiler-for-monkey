@@ -152,6 +152,19 @@ token_t *next_token_lexer(lexer_t *lexer) {
     token->type = GT;
     read_char_lexer(lexer);
     break;
+  case '"':
+    token->type = STRING;
+    read_char_lexer(lexer);
+    char *string_val = (char *)malloc(STRING_MAX_SIZE);
+    int i = 0;
+    while (lexer->ch != '"') {
+      string_val[i++] = lexer->ch;
+      read_char_lexer(lexer);
+    }
+    string_val[i] = '\0';
+    token->literal = string_val;
+    read_char_lexer(lexer);
+    break;
   case '\0':
     token->literal = "";
     token->type = END_OF_FILE;

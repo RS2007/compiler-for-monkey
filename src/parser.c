@@ -386,6 +386,13 @@ char *integer_literal_string(void *integer_expression_cast_to_void) {
   return integer_literal_string;
 }
 
+char *string_literal_string(void *string_expression_cast_to_void) {
+  string_literal_t *string = (string_literal_t *)string_expression_cast_to_void;
+  char *string_literal_string = (char *)malloc(STRING_MAX_SIZE);
+  sprintf(string_literal_string, "%s", string->value);
+  return string_literal_string;
+}
+
 statement_t *parse_expression_statement(parser_t *parser) {
   expression_statement_t *stmt =
       (expression_statement_t *)malloc(sizeof(expression_statement_t));
@@ -464,6 +471,14 @@ expression_t *parse_integer_literal(parser_t *parser) {
   integer_expression->value = atoi(parser->curr_token->literal);
   integer_expression->expression.node.string = integer_literal_string;
   return (expression_t *)integer_expression;
+}
+
+expression_t *parse_string_literal(parser_t *parser) {
+  string_literal_t *string_expression = malloc(sizeof(string_literal_t));
+  string_expression->expression.type = STRING_LITERAL;
+  string_expression->value = parser->curr_token->literal;
+  string_expression->expression.node.string = string_literal_string;
+  return (expression_t *)string_expression;
 }
 
 statement_t *parse_statement(parser_t *parser) {
