@@ -115,6 +115,15 @@ object_t *eval_call_expression(call_expression_t *call_expression,
                         call_expression->arguments_length, env);
 }
 
+object_t *eval_string_expression(string_literal_t *string_literal,
+                                 environment_t *env) {
+  string_obj_t *string_obj = (string_obj_t *)malloc(sizeof(string_obj_t));
+  string_obj->object.type = type_string;
+  string_obj->object.inspect = inspect_string;
+  string_obj->value = strdup(string_literal->value);
+  return (object_t *)string_obj;
+}
+
 function_obj_t *eval_function_expression(function_literal_t *function_literal,
                                          environment_t *env) {
   function_obj_t *func_obj = (function_obj_t *)malloc(sizeof(function_obj_t));
@@ -134,6 +143,18 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr,
     object_t *left_obj = eval_expression(infix_expr->left, env);
     object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
+      if (left_obj->type() == STRING_OBJ && right_obj->type() == STRING_OBJ) {
+        string_obj_t *left_string = (string_obj_t *)left_obj;
+        string_obj_t *right_string = (string_obj_t *)right_obj;
+        string_obj_t *return_obj = (string_obj_t *)malloc(sizeof(string_obj_t));
+        char *added_string = (char *)malloc(2 * STRING_MAX_SIZE);
+        added_string[0] = '\0';
+        return_obj->value = strcat(added_string, left_string->value);
+        return_obj->value = strcat(added_string, right_string->value);
+        return_obj->object.type = type_string;
+        return_obj->object.inspect = inspect_string;
+        return (object_t *)return_obj;
+      }
       if (left_obj->type() == ERROR_OBJ) {
         return (object_t *)left_obj;
       }
@@ -413,6 +434,10 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
   case CALL_EXPRESSION: {
     call_expression_t *call_expression = (call_expression_t *)expression;
     return (object_t *)eval_call_expression(call_expression, env);
+  }
+  case STRING_LITERAL: {
+    string_literal_t *string_literal = (string_literal_t *)expression;
+    return (object_t *)eval_string_expression(string_literal, env);
   }
   }
   return NULL;

@@ -792,6 +792,22 @@ int test_call_with_operator_precedence(void) {
   return 0;
 }
 
+int test_parsing_string(void) {
+  char *input = "\"Hello World!\"";
+  char *expected = "Hello World!";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  char *program_string = program_node->node.string((void *)program_node);
+  if (strcmp(expected, program_string) != 0) {
+    fprintf(stderr, "Expected %s,got %s", expected, program_string);
+    exit(-1);
+  }
+
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
 int main(void) {
   test_let_statements();
   test_if_expression();
@@ -807,5 +823,6 @@ int main(void) {
   test_function_literal_parsing();
   test_call_expressions();
   test_call_with_operator_precedence();
-  return test_function_literal_with_multiple_arguments();
+  test_function_literal_with_multiple_arguments();
+  return test_parsing_string();
 }

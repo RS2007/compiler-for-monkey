@@ -88,6 +88,13 @@ char *inspect_error(void *error_obj_cast_to_void) {
 
 object_type type_error() { return ERROR_OBJ; }
 
+char *inspect_string(void *string_obj_cast_to_void) {
+  string_obj_t *string_obj = (string_obj_t *)string_obj_cast_to_void;
+  return string_obj->value;
+}
+
+object_type type_string() { return STRING_OBJ; }
+
 void free_identifier(identifier_t *identifier) {
   FREE(identifier->value);
   FREE(identifier->token);
@@ -191,6 +198,12 @@ void free_expression(expression_t *expression) {
     free_expression(func_literal->function);
     break;
   }
+  case STRING_LITERAL: {
+    string_literal_t *string_literal = (string_literal_t *)expression;
+    FREE(string_literal->token);
+    FREE(string_literal->value);
+    FREE(string_literal);
+  }
   case CALL_EXPRESSION: {
   }
   }
@@ -261,6 +274,12 @@ void free_object(object_t *object) {
     error_obj_t *error_obj = (error_obj_t *)object;
     FREE(error_obj->message);
     FREE(error_obj);
+    break;
+  }
+  case STRING_OBJ: {
+    string_obj_t *string_obj = (string_obj_t *)object;
+    FREE(string_obj->value);
+    FREE(string_obj);
     break;
   }
   }

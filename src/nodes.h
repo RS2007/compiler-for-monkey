@@ -27,6 +27,7 @@ typedef enum expression_type {
   IF_EXPRESSION,
   FUNCTION_EXPRESSION,
   CALL_EXPRESSION,
+  STRING_LITERAL,
 } expression_type;
 
 typedef char *(*Token_literal)(void *);
@@ -84,6 +85,12 @@ typedef struct infix_expression_t {
   expression_t *right;
   char *op;
 } infix_expression_t;
+
+typedef struct string_literal_t {
+  expression_t expression;
+  token_t *token;
+  char *value;
+} string_literal_t;
 
 typedef struct let_statement_t {
   statement_t statement;
@@ -156,6 +163,7 @@ expression_t *parse_grouped_expression();
 expression_t *parse_if_expression();
 expression_t *parse_function_expression();
 expression_t *parse_call_expression();
+expression_t *parse_string_literal();
 
 expression_t *parse_infix_function();
 
@@ -184,6 +192,12 @@ static prefix_parse_function prefix_parse_functions[] = {
     parse_boolean_expression,
     parse_if_expression,
     NULL,
+    NULL,
+    NULL,
+
+    // Equality
+    NULL,
+    parse_string_literal,
 };
 
 static infix_parse_function infix_parse_functions[] = {
