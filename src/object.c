@@ -205,6 +205,13 @@ void free_expression(expression_t *expression) {
     FREE(string_literal);
   }
   case CALL_EXPRESSION: {
+    call_expression_t *call_expression = (call_expression_t *)expression;
+    for (int i = 0; i < call_expression->arguments_length; ++i) {
+      FREE(call_expression->arguments[i]);
+    }
+    free_expression(call_expression->function);
+    FREE(call_expression->token);
+    FREE(call_expression);
   }
   }
 }

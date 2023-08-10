@@ -8,8 +8,6 @@ TARGET = -x86-64-amd64-linux
 SOURCES = $(wildcard $(SRC_FOLDER)/*.c)
 HEADERS = $(wildcard $(SRC_FOLDER)/*.h)
 TESTS = $(wildcard $(TEST_FOLDER)/*.c)
-SOURCES_WITHOUT_REPL_EVALUATOR_OBJECT = $(shell find ./src -type f -name '*.c' ! -name 'repl.c' ! -name 'evaluator.c' ! -name 'object.c')
-SOURCES_WITHOUT_MAIN = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'parser.c')
 SOURCES_WITHOUT_MAIN_REPL = $(shell find ./src -type f -name '*.c' ! -name 'main.c' ! -name 'repl.c')
 BIN = $(wildcard $(BIN_FOLDER)/*)
 
@@ -34,7 +32,3 @@ test-debug: $(SOURCES_HEADERS) $(TESTS)
 
 clean: $(BIN)
 	rm -rf $(BIN)
-
-
-temp: $(SOURCES_HEADERS) $(TESTS)
-	$(CC) -o ./bin/parser_test ${TEST_FOLDER}/parser_test.c ${SOURCES_WITHOUT_MAIN_REPL} $(C_FLAGS) && ./bin/parser_test
