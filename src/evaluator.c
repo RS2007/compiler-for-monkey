@@ -143,6 +143,18 @@ object_t *eval_infix_expression(infix_expression_t *infix_expr,
     object_t *left_obj = eval_expression(infix_expr->left, env);
     object_t *right_obj = eval_expression(infix_expr->right, env);
     if (left_obj->type() != INTEGER || right_obj->type() != INTEGER) {
+      if (left_obj->type() == STRING_OBJ && right_obj->type() == STRING_OBJ) {
+        string_obj_t *left_string = (string_obj_t *)left_obj;
+        string_obj_t *right_string = (string_obj_t *)right_obj;
+        string_obj_t *return_obj = (string_obj_t *)malloc(sizeof(string_obj_t));
+        char *added_string = (char *)malloc(2 * STRING_MAX_SIZE);
+        added_string[0] = '\0';
+        return_obj->value = strcat(added_string, left_string->value);
+        return_obj->value = strcat(added_string, right_string->value);
+        return_obj->object.type = type_string;
+        return_obj->object.inspect = inspect_string;
+        return (object_t *)return_obj;
+      }
       if (left_obj->type() == ERROR_OBJ) {
         return (object_t *)left_obj;
       }
