@@ -77,11 +77,44 @@ environment_t *extend_function_env(environment_t *env,
   return new_env;
 }
 
+integer_obj_t *get_monkey_string_length(string_obj_t *argument) {
+  integer_obj_t *ret_integer = (integer_obj_t *)malloc(sizeof(integer_obj_t));
+  ret_integer->object.type = type_int;
+  ret_integer->object.inspect = inspect_int;
+  ret_integer->value = strlen(argument->value);
+  return ret_integer;
+}
+
 object_t *apply_function(expression_t *function,
                          object_t **evaluated_expressions,
                          size_t evaluated_expressions_length,
                          environment_t *env) {
   object_t *function_literal = eval_expression(function, env);
+  if (function_literal->type((void *)function_literal) == BUILTIN_OBJ) {
+    builtin_obj_t *builtin = (builtin_obj_t *)function_literal;
+    if (strcmp(builtin->name, "len") == 0) {
+      if (evaluated_expressions_length != 1) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(err_string, STRING_MAX_SIZE,
+                 "string length function takes in only 1 argument, got %zu\n",
+                 evaluated_expressions_length);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      if (evaluated_expressions[0]->type() != STRING_OBJ) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(err_string, STRING_MAX_SIZE,
+                 "Expected string argument, got type %s\n",
+                 object_type_strings[evaluated_expressions[0]->type()]);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      return (object_t *)get_monkey_string_length(
+          (string_obj_t *)evaluated_expressions[0]);
+    }
+  }
   if (function_literal->type() == ERROR_OBJ) {
     return (object_t *)function_literal;
   }
@@ -92,6 +125,7 @@ object_t *apply_function(expression_t *function,
     snprintf(
         err_string, STRING_MAX_SIZE, "Function expected %zu arguments got %zu",
         function_typecasted->parameters_length, evaluated_expressions_length);
+    err->message = err_string;
     return (object_t *)err;
   }
   environment_t *extended_environment =
@@ -398,6 +432,13 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     }
     object_t *val = get_environment(env, identifier->value);
     if (val == NULL) {
+      if (strcmp(identifier->value, "len") == 0) {
+        builtin_obj_t *builtin = (builtin_obj_t *)malloc(sizeof(builtin_obj_t));
+        builtin->object.inspect = inspect_builtin;
+        builtin->object.type = type_builtin;
+        builtin->name = strdup(identifier->value);
+        return (object_t *)builtin;
+      }
       error_obj_t *err_obj = create_error_object();
       err_obj->message = (char *)malloc(STRING_MAX_SIZE);
       snprintf(err_obj->message, STRING_MAX_SIZE, "Identifier not found: %s",

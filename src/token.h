@@ -42,6 +42,9 @@ typedef enum token_type {
   NOT_EQ,
   // STRINGS
   STRING,
+  // ARRAY
+  LBRACKET,
+  RBRACKET
 } token_type;
 
 static const char *token_strings[] = {

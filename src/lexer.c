@@ -165,6 +165,14 @@ token_t *next_token_lexer(lexer_t *lexer) {
     token->literal = string_val;
     read_char_lexer(lexer);
     break;
+  case '[':
+    token->type = LBRACKET;
+    token->literal = strdup("[");
+    break;
+  case ']':
+    token->type = RBRACKET;
+    token->literal = strdup("]");
+    break;
   case '\0':
     token->literal = "";
     token->type = END_OF_FILE;

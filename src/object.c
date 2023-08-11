@@ -34,6 +34,14 @@ char *inspect_boolean(void *boolean_object_cast_to_void) {
 
 object_type type_boolean() { return BOOLEAN; }
 
+char *inspect_builtin(void *builtin_object_cast_to_void) {
+  char *buffer = malloc(STRING_MAX_SIZE);
+  buffer = "Builtin function";
+  return buffer;
+}
+
+object_type type_builtin() { return BUILTIN_OBJ; }
+
 char *get_concated_arguments_string(expression_t **parameters,
                                     size_t parameters_length) {
   char *concated_arg_string = (char *)malloc(STRING_MAX_SIZE);
@@ -122,7 +130,8 @@ void free_statement(statement_t *statement) {
     expression_statement_t *expr_statement =
         (expression_statement_t *)statement;
     free_expression(expr_statement->expression);
-    FREE(expr_statement->token);
+    // TODO: check why this segfaults
+    // FREE(expr_statement->token);
     FREE(expr_statement);
     break;
   }
@@ -203,6 +212,7 @@ void free_expression(expression_t *expression) {
     FREE(string_literal->token);
     FREE(string_literal->value);
     FREE(string_literal);
+    break;
   }
   case CALL_EXPRESSION: {
     call_expression_t *call_expression = (call_expression_t *)expression;
@@ -287,6 +297,12 @@ void free_object(object_t *object) {
     string_obj_t *string_obj = (string_obj_t *)object;
     FREE(string_obj->value);
     FREE(string_obj);
+    break;
+  }
+  case BUILTIN_OBJ: {
+    builtin_obj_t *builtin = (builtin_obj_t *)object;
+    FREE(builtin->name);
+    FREE(builtin);
     break;
   }
   }
