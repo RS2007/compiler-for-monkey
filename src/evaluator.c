@@ -12,6 +12,7 @@ object_t *eval(node_t *, environment_t *);
 object_t *eval_expression(expression_t *, environment_t *);
 object_t *eval_statement(statement_t *, environment_t *);
 object_t *eval_statements(statement_t **, size_t, environment_t *);
+null_obj_t *create_null_obj();
 
 function_obj_t *create_func_object() {
   function_obj_t *function_obj =
@@ -412,6 +413,34 @@ object_t *eval_prefix_expression(prefix_expression_t *prefix_expr,
   return NULL;
 }
 
+array_obj_t *eval_array_literal(array_literal_t *arr_literal,
+                                environment_t *env) {
+  array_obj_t *array_obj = (array_obj_t *)malloc(sizeof(array_obj_t));
+  array_obj->object.inspect = inspect_array;
+  array_obj->object.type = type_array;
+  array_obj->elements_length = arr_literal->elements_length;
+  array_obj->elements_capacity = arr_literal->elements_capacity;
+  array_obj->elements =
+      (object_t **)calloc(arr_literal->elements_capacity, sizeof(object_t));
+  for (int i = 0; i < arr_literal->elements_length; i++) {
+    array_obj->elements[i] = eval_expression(arr_literal->elements[i], env);
+  }
+  return array_obj;
+}
+
+object_t *eval_index_expr(index_expression_t *index_expr, environment_t *env) {
+  object_t *obj = eval_expression(index_expr->left, env);
+  assert(obj->type() == ARRAY_OBJ);
+  array_obj_t *array_obj = (array_obj_t *)obj;
+  object_t *index = eval_expression(index_expr->index, env);
+  assert(index->type() == INTEGER);
+  integer_obj_t *integer = (integer_obj_t *)index;
+  if (integer->value + 1 > array_obj->elements_length) {
+    return (object_t *)create_null_obj();
+  }
+  return array_obj->elements[integer->value];
+}
+
 object_t *eval_expression(expression_t *expression, environment_t *env) {
   switch (expression->type) {
   case INTEGER_LITERAL: {
@@ -479,6 +508,14 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
   case STRING_LITERAL: {
     string_literal_t *string_literal = (string_literal_t *)expression;
     return (object_t *)eval_string_expression(string_literal, env);
+  }
+  case ARRAY_LITERAL: {
+    array_literal_t *array_literal = (array_literal_t *)expression;
+    return (object_t *)eval_array_literal(array_literal, env);
+  }
+  case INDEX_EXPRESSION: {
+    index_expression_t *index_expr = (index_expression_t *)expression;
+    return (object_t *)eval_index_expr(index_expr, env);
   }
   }
   return NULL;

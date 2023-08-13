@@ -103,6 +103,27 @@ char *inspect_string(void *string_obj_cast_to_void) {
 
 object_type type_string() { return STRING_OBJ; }
 
+char *inspect_array(void *array_obj_cast_to_void) {
+  array_obj_t *array_obj = (array_obj_t *)array_obj_cast_to_void;
+  char *buffer = (char *)malloc(array_obj->elements_length * STRING_MAX_SIZE);
+  buffer[0] = '[';
+  buffer[1] = '\0';
+  for (int i = 0; i < array_obj->elements_length; ++i) {
+    if (i != array_obj->elements_length - 1) {
+      strcat(buffer,
+             array_obj->elements[i]->inspect((void *)array_obj->elements[i]));
+      strcat(buffer, ", ");
+    } else {
+      strcat(buffer,
+             array_obj->elements[i]->inspect((void *)array_obj->elements[i]));
+      strcat(buffer, "]");
+    }
+  }
+  return buffer;
+}
+
+object_type type_array() { return ARRAY_OBJ; }
+
 void free_identifier(identifier_t *identifier) {
   FREE(identifier->value);
   FREE(identifier->token);
