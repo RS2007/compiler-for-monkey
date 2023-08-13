@@ -43,6 +43,6 @@ fib(15);
 
 ## TODO
 
-- [ ] adding support for strings and arrays
+- [x] adding support for strings and arrays
 - [ ] adding support for hashmaps/hashtables
 - [ ] build a bytecode compiler
