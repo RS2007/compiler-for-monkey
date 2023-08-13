@@ -68,6 +68,21 @@ char *print_infix_expression_string(void *expression_cast_to_void) {
   return infix_expression_string;
 }
 
+char *print_array_literal(void *array_literal_cast_to_void) {
+  array_literal_t *array = (array_literal_t *)array_literal_cast_to_void;
+  char *buffer = (char *)malloc(STRING_MAX_SIZE);
+  buffer[0] = '\0';
+  strcat(buffer, "[");
+  for (int i = 0; i < array->elements_length; ++i) {
+    strcat(buffer, array->elements[i]->node.string((void *)array->elements[i]));
+    if (i != array->elements_length - 1) {
+      strcat(buffer, ", ");
+    }
+  }
+  strcat(buffer, "]");
+  return buffer;
+}
+
 char *print_prefix_expression_string(void *expression_statement_cast_to_void) {
   prefix_expression_t *prefix_expression =
       (prefix_expression_t *)expression_statement_cast_to_void;
@@ -275,6 +290,18 @@ bool expect_peek_token(parser_t *parser, token_type type) {
   return false;
 }
 
+void push_statements_expression_array(expression_t **elements,
+                                      int *elements_length,
+                                      int *elements_capacity,
+                                      expression_t *expr) {
+  if (*elements_length + 1 > *elements_capacity) {
+    (*elements_capacity) = (*elements_capacity) * 2;
+    elements = realloc(elements, (*elements_capacity) * sizeof(expression_t));
+  }
+  elements[(*elements_length)] = expr;
+  (*elements_length) = (*elements_length) + 1;
+}
+
 expression_t *parse_expression(parser_t *parser, precedence_t precedence) {
   prefix_parse_function prefix =
       prefix_parse_functions[parser->curr_token->type];
@@ -298,6 +325,80 @@ expression_t *parse_expression(parser_t *parser, precedence_t precedence) {
     left_expression = infix(parser, left_expression);
   }
   return left_expression;
+}
+
+char *print_index_expression(void *index_expr_cast_to_void) {
+  index_expression_t *index_expr =
+      (index_expression_t *)index_expr_cast_to_void;
+  char *buffer = (char *)malloc(STRING_MAX_SIZE);
+  buffer[0] = '\0';
+  strcat(buffer, "(");
+  strcat(buffer, index_expr->left->node.string((void *)index_expr->left));
+  strcat(buffer, "[");
+  strcat(buffer, index_expr->index->node.string((void *)index_expr->index));
+  strcat(buffer, "])");
+  return buffer;
+}
+
+expression_t *parse_index_expression(parser_t *parser, expression_t *left) {
+  index_expression_t *expr =
+      (index_expression_t *)malloc(sizeof(index_expression_t));
+  expr->token = parser->curr_token;
+  expr->left = left;
+  expr->expression.type = INDEX_EXPRESSION;
+  expr->expression.node.string = print_index_expression;
+  next_token_parser(parser);
+  expr->index = parse_expression(parser, LOWEST);
+  if (!(parser->peek_token->type == RBRACKET)) {
+    return NULL;
+  }
+  next_token_parser(parser);
+  return (expression_t *)expr;
+}
+
+bool parse_expression_list(parser_t *parser, token_type type,
+                           expression_t **elements, int *elements_length,
+                           int *elements_capacity) {
+  // TODO: Can this be reused for parsing args for call expressions?
+  if (parser->peek_token->type == type) {
+    next_token_parser(parser);
+    return true;
+  }
+  next_token_parser(parser);
+  push_statements_expression_array(elements, elements_length, elements_capacity,
+                                   parse_expression(parser, LOWEST));
+  while (parser->peek_token->type == COMMA) {
+    next_token_parser(parser);
+    next_token_parser(parser);
+    push_statements_expression_array(elements, elements_length,
+                                     elements_capacity,
+                                     parse_expression(parser, LOWEST));
+  }
+  if (!(parser->peek_token->type == type)) {
+    return false;
+  }
+  return true;
+}
+
+expression_t *parse_array_literal(parser_t *parser) {
+  array_literal_t *array = (array_literal_t *)malloc(sizeof(array_literal_t));
+  array->expression.type = ARRAY_LITERAL;
+  array->expression.node.string = print_array_literal;
+  array->token = parser->curr_token;
+  expression_t **elements =
+      calloc(DEFAULT_DYNAMIC_ARR_SIZE, sizeof(expression_t));
+  int elements_length = 0;
+  int elements_capacity = DEFAULT_DYNAMIC_ARR_SIZE;
+  if (!parse_expression_list(parser, RBRACKET, elements, &elements_length,
+                             &elements_capacity)) {
+    return NULL;
+  }
+  array->elements = elements;
+  array->elements_length = elements_length;
+  array->elements_capacity = elements_capacity;
+  next_token_parser(parser);
+  assert(parser->curr_token->type == RBRACKET);
+  return (expression_t *)array;
 }
 
 statement_t *parse_let_statement(parser_t *parser) {

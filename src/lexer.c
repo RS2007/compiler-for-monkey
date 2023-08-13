@@ -168,10 +168,12 @@ token_t *next_token_lexer(lexer_t *lexer) {
   case '[':
     token->type = LBRACKET;
     token->literal = strdup("[");
+    read_char_lexer(lexer);
     break;
   case ']':
     token->type = RBRACKET;
     token->literal = strdup("]");
+    read_char_lexer(lexer);
     break;
   case '\0':
     token->literal = "";
@@ -183,6 +185,7 @@ token_t *next_token_lexer(lexer_t *lexer) {
       token->type = lookup_ident_token(token->literal);
       return token;
     }
+    printf("Before crashing this should give something %c", lexer->ch);
     token->type = ILLEGAL;
     token->literal = strdup(&lexer->ch);
   }

@@ -48,11 +48,11 @@ typedef enum token_type {
 } token_type;
 
 static const char *token_strings[] = {
-    "ILLEGAL",  "END_OF_FILE", "IDENT",  "INT",     "ASSIGN", "PLUS",
-    "BANG",     "MINUS",       "SLASH",  "ASTERIK", "LT",     "GT",
-    "COMMA",    "SEMICOLON",   "LPAREN", "RPAREN",  "LBRACE", "RBRACE",
-    "FUNCTION", "LET",         "TRUE",   "FALSE",   "IF",     "ELSE",
-    "RETURN",   "EQ",          "NOT_EQ", "STRING"};
+    "ILLEGAL",  "END_OF_FILE", "IDENT",  "INT",     "ASSIGN",   "PLUS",
+    "BANG",     "MINUS",       "SLASH",  "ASTERIK", "LT",       "GT",
+    "COMMA",    "SEMICOLON",   "LPAREN", "RPAREN",  "LBRACE",   "RBRACE",
+    "FUNCTION", "LET",         "TRUE",   "FALSE",   "IF",       "ELSE",
+    "RETURN",   "EQ",          "NOT_EQ", "STRING",  "LBRACKET", "RBRACKET"};
 
 //#define token_string_from_type(tok_type) token_strings[tok_type]
 // tok_type since token_type is name of enum, not sure if needed

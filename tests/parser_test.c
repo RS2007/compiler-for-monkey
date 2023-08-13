@@ -303,7 +303,14 @@ int test_operator_precedence() {
       {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
       {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
       {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
-  };
+      {
+          "a * [1, 2, 3, 4][b * c] * d",
+          "((a * ([1, 2, 3, 4][(b * c)])) * d)",
+      },
+      {
+          "add(a * b[2], b[1], 2 * [1, 2][1])",
+          "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+      }};
   int arr_size = sizeof(tests) / sizeof(tests[0]);
   int i;
   for (i = 0; i < arr_size; ++i) {
@@ -808,6 +815,121 @@ int test_parsing_string(void) {
   return 0;
 }
 
+int test_parsing_array(void) {
+  char *input = "[1, 2*2, 3+3]";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  if (program_node->statements_length != 1) {
+    fprintf(stderr, "Expected %d,got %zu", 1, program_node->statements_length);
+    exit(-1);
+  }
+  expression_statement_t *expr_stmt =
+      (expression_statement_t *)(program_node->statements[0]);
+  if (expr_stmt->expression->type != ARRAY_LITERAL) {
+    fprintf(stderr, "Expected array literal,got %u",
+            expr_stmt->expression->type);
+    exit(-1);
+  }
+  array_literal_t *array = (array_literal_t *)expr_stmt->expression;
+  if (array->elements_length != 3) {
+    fprintf(stderr, "Expected array length of %d,got %zu", 3,
+            array->elements_length);
+    exit(-1);
+  }
+  if (((integer_t *)(array->elements[0]))->value == 1) {
+  }
+
+  infix_expression_t *infix_expr1 = (infix_expression_t *)array->elements[1];
+  integer_t *integer_left = (integer_t *)infix_expr1->left;
+  integer_t *integer_right = (integer_t *)infix_expr1->right;
+  if (strcmp(infix_expr1->op, "*") != 0) {
+    fprintf(stderr, "Error: expected %s value, got %s value", infix_expr1->op,
+            "*");
+    exit(-1);
+  }
+  if (integer_left->value != 2) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_left->value, 2);
+    exit(-1);
+  }
+
+  if (integer_right->value != 2) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_right->value, 2);
+    exit(-1);
+  }
+  infix_expression_t *infix_expr2 = (infix_expression_t *)array->elements[2];
+  integer_t *integer_left2 = (integer_t *)infix_expr2->left;
+  integer_t *integer_right2 = (integer_t *)infix_expr2->right;
+  if (strcmp(infix_expr2->op, "+") != 0) {
+    fprintf(stderr, "Error: expected %s value, got %s value", infix_expr2->op,
+            "*");
+    exit(-1);
+  }
+  if (integer_left2->value != 3) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_left2->value, 2);
+    exit(-1);
+  }
+
+  if (integer_right2->value != 3) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_right2->value, 2);
+    exit(-1);
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int test_index_expression() {
+  char *input = "myArray[1 + 1]";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program = parse_program(parser);
+
+  if (program->statements_length != 1) {
+    fprintf(stderr, "Expected 1 statement, got %zu",
+            program->statements_length);
+    exit(1);
+  }
+  expression_statement_t *expr_stmt =
+      (expression_statement_t *)program->statements[0];
+  expression_t *expr = expr_stmt->expression;
+  if (expr->type != INDEX_EXPRESSION) {
+    fprintf(stderr, "Expected index expression, got something else");
+    exit(1);
+  }
+  index_expression_t *index_expr = (index_expression_t *)expr;
+  if (strcmp((((identifier_t *)index_expr->left))->value, "myArray") != 0) {
+    fprintf(stderr, "Expected %s, got %s", "myArray",
+            ((identifier_t *)index_expr->left)->value);
+    exit(1);
+  }
+
+  infix_expression_t *infix_expr = (infix_expression_t *)index_expr->index;
+  integer_t *integer_left = (integer_t *)infix_expr->left;
+  integer_t *integer_right = (integer_t *)infix_expr->right;
+  if (strcmp(infix_expr->op, "+") != 0) {
+    fprintf(stderr, "Error: expected %s value, got %s value", infix_expr->op,
+            "*");
+    exit(-1);
+  }
+  if (integer_left->value != 1) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_left->value, 1);
+    exit(-1);
+  }
+
+  if (integer_right->value != 1) {
+    fprintf(stderr, "Error: expected %lld value, got %d value",
+            integer_right->value, 1);
+    exit(-1);
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
 int main(void) {
   test_let_statements();
   test_if_expression();
@@ -824,5 +946,7 @@ int main(void) {
   test_call_expressions();
   test_call_with_operator_precedence();
   test_function_literal_with_multiple_arguments();
-  return test_parsing_string();
+  test_parsing_string();
+  test_parsing_array();
+  return test_index_expression();
 }

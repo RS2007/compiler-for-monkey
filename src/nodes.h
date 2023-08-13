@@ -28,6 +28,8 @@ typedef enum expression_type {
   FUNCTION_EXPRESSION,
   CALL_EXPRESSION,
   STRING_LITERAL,
+  ARRAY_LITERAL,
+  INDEX_EXPRESSION,
 } expression_type;
 
 typedef char *(*Token_literal)(void *);
@@ -152,6 +154,21 @@ typedef struct call_expression_t {
   size_t arguments_capacity;
 } call_expression_t;
 
+typedef struct array_literal_t {
+  expression_t expression;
+  token_t *token;
+  expression_t **elements;
+  size_t elements_length;
+  size_t elements_capacity;
+} array_literal_t;
+
+typedef struct index_expression_t {
+  expression_t expression;
+  token_t *token;
+  expression_t *left;
+  expression_t *index;
+} index_expression_t;
+
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();
 
@@ -164,8 +181,10 @@ expression_t *parse_if_expression();
 expression_t *parse_function_expression();
 expression_t *parse_call_expression();
 expression_t *parse_string_literal();
+expression_t *parse_array_literal();
 
 expression_t *parse_infix_function();
+expression_t *parse_index_expression();
 
 static prefix_parse_function prefix_parse_functions[] = {
     NULL,
@@ -198,6 +217,7 @@ static prefix_parse_function prefix_parse_functions[] = {
     // Equality
     NULL,
     parse_string_literal,
+    parse_array_literal,
 };
 
 static infix_parse_function infix_parse_functions[] = {
@@ -220,4 +240,4 @@ static infix_parse_function infix_parse_functions[] = {
 
     parse_infix_function, // EQUALS,
     parse_infix_function, // NOTEQ
-};
+    NULL, parse_index_expression, NULL};
