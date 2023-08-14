@@ -218,6 +218,88 @@ object_t *apply_function(expression_t *function,
         return (object_t *)copied_array;
       }
     }
+    if (strcmp(builtin->name, "map") == 0) {
+      if (evaluated_expressions_length != 2) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(err_string, STRING_MAX_SIZE,
+                 "array map function takes in only 2 arguments, got %zu\n",
+                 evaluated_expressions_length);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ &&
+          evaluated_expressions[1]->type() == FUNCTION_OBJ) {
+        array_obj_t *array = ((array_obj_t *)evaluated_expressions[0]);
+        if (array->elements_length == 0) {
+          return (object_t *)create_null_obj();
+        }
+        function_obj_t *func = (function_obj_t *)evaluated_expressions[1];
+        array_obj_t *copied_array =
+            (array_obj_t *)copy_monkey_object((object_t *)array);
+        copied_array->object.type = type_array;
+        copied_array->object.inspect = inspect_array;
+
+        if (func->parameters_length == 1) {
+          for (int i = 0; i < copied_array->elements_length; ++i) {
+            environment_t *new_env =
+                extend_function_env(env, &array->elements[i], 1, func);
+            copied_array->elements[i] = unwrap_return_value(
+                eval_statements(func->body->statements,
+                                func->body->statements_length, new_env));
+          }
+          return (object_t *)copied_array;
+        }
+        if (func->parameters_length == 2) {
+          for (int i = 0; i < copied_array->elements_length; ++i) {
+            object_t **parameters = (object_t **)calloc(2, sizeof(object_t));
+            integer_obj_t *integer_obj =
+                (integer_obj_t *)malloc(sizeof(integer_obj_t));
+            integer_obj->object.type = type_int;
+            integer_obj->object.inspect = inspect_int;
+            integer_obj->value = i;
+            parameters[0] = array->elements[i];
+            parameters[1] = (object_t *)integer_obj;
+            environment_t *new_env =
+                extend_function_env(env, parameters, 2, func);
+            copied_array->elements[i] = unwrap_return_value(
+                eval_statements(func->body->statements,
+                                func->body->statements_length, new_env));
+          }
+          return (object_t *)copied_array;
+        }
+        if (func->parameters_length < 1 || func->parameters_length > 2) {
+          error_obj_t *err = create_error_object();
+          char *err_string = (char *)malloc(STRING_MAX_SIZE);
+          snprintf(err_string, STRING_MAX_SIZE,
+                   "function given as map argument should have only 1 or 2 "
+                   "arguments");
+          err->message = err_string;
+          return (object_t *)err;
+        }
+      }
+    }
+    if (strcmp(builtin->name, "push") == 0) {
+      if (evaluated_expressions_length != 2) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(err_string, STRING_MAX_SIZE,
+                 "array push function takes in only 2 arguments, got %zu\n",
+                 evaluated_expressions_length);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ) {
+        array_obj_t *array = (array_obj_t *)evaluated_expressions[0];
+        if (array->elements_length + 1 > array->elements_capacity) {
+          array->elements_capacity *= 2;
+          array->elements = realloc(array->elements, array->elements_capacity *
+                                                         sizeof(object_t));
+        }
+        array->elements[array->elements_length++] = evaluated_expressions[1];
+        return (object_t *)create_null_obj();
+      }
+    }
   }
 
   if (function_literal->type() == ERROR_OBJ) {
@@ -569,7 +651,8 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
           strcmp(identifier->value, "first") == 0 ||
           strcmp(identifier->value, "last") == 0 ||
           strcmp(identifier->value, "tail") == 0 ||
-          strcmp(identifier->value, "map") == 0) {
+          strcmp(identifier->value, "map") == 0 ||
+          strcmp(identifier->value, "push") == 0) {
         builtin_obj_t *builtin = (builtin_obj_t *)malloc(sizeof(builtin_obj_t));
         builtin->object.inspect = inspect_builtin;
         builtin->object.type = type_builtin;
@@ -610,7 +693,6 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     return (object_t *)eval_function_expression(func_expression, env);
   }
   case CALL_EXPRESSION: {
-    printf("Inside call\n");
     call_expression_t *call_expression = (call_expression_t *)expression;
     return (object_t *)eval_call_expression(call_expression, env);
   }
