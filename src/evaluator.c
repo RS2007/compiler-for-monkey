@@ -86,6 +86,39 @@ integer_obj_t *get_monkey_string_length(string_obj_t *argument) {
   return ret_integer;
 }
 
+integer_obj_t *get_monkey_array_length(array_obj_t *array) {
+  integer_obj_t *ret_integer = (integer_obj_t *)malloc(sizeof(integer_obj_t));
+  ret_integer->object.type = type_int;
+  ret_integer->object.inspect = inspect_int;
+  ret_integer->value = array->elements_length;
+  return ret_integer;
+}
+
+object_t *copy_monkey_object(object_t *original) {
+  switch (original->type()) {
+  case INTEGER: {
+    integer_obj_t *integer_obj = (integer_obj_t *)malloc(sizeof(integer_obj_t));
+    integer_obj->object.type = type_int;
+    integer_obj->object.inspect = inspect_int;
+    integer_obj->value = ((integer_obj_t *)original)->value;
+    return (object_t *)integer_obj;
+  }
+  case ARRAY_OBJ: {
+    array_obj_t *array_obj = (array_obj_t *)malloc(sizeof(array_obj_t));
+    array_obj_t *original_array = (array_obj_t *)original;
+    array_obj->elements_length = original_array->elements_length;
+    array_obj->elements_capacity = original_array->elements_capacity;
+    array_obj->elements =
+        calloc(original_array->elements_capacity, sizeof(object_t));
+    for (int i = 0; i < original_array->elements_length; ++i) {
+      array_obj->elements[i] = copy_monkey_object(original_array->elements[i]);
+    }
+    return (object_t *)array_obj;
+  }
+  }
+  return original; // TODO: add other cases here
+}
+
 object_t *apply_function(expression_t *function,
                          object_t **evaluated_expressions,
                          size_t evaluated_expressions_length,
@@ -97,25 +130,96 @@ object_t *apply_function(expression_t *function,
       if (evaluated_expressions_length != 1) {
         error_obj_t *err = create_error_object();
         char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(
+            err_string, STRING_MAX_SIZE,
+            "string/array length function takes in only 1 argument, got %zu\n",
+            evaluated_expressions_length);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      if (evaluated_expressions[0]->type() == STRING_OBJ) {
+        return (object_t *)get_monkey_string_length(
+            (string_obj_t *)evaluated_expressions[0]);
+      }
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ) {
+        return (object_t *)get_monkey_array_length(
+            (array_obj_t *)evaluated_expressions[0]);
+      }
+      error_obj_t *err = create_error_object();
+      char *err_string = (char *)malloc(STRING_MAX_SIZE);
+      snprintf(err_string, STRING_MAX_SIZE,
+               "Expected string argument, got type %s\n",
+               object_type_strings[evaluated_expressions[0]->type()]);
+      err->message = err_string;
+      return (object_t *)err;
+    }
+    if (strcmp(builtin->name, "first") == 0) {
+      if (evaluated_expressions_length != 1) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
         snprintf(err_string, STRING_MAX_SIZE,
-                 "string length function takes in only 1 argument, got %zu\n",
+                 "array first function takes in only 1 argument, got %zu\n",
                  evaluated_expressions_length);
         err->message = err_string;
         return (object_t *)err;
       }
-      if (evaluated_expressions[0]->type() != STRING_OBJ) {
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ) {
+        array_obj_t *array = ((array_obj_t *)evaluated_expressions[0]);
+        if (array->elements_length == 0) {
+          return (object_t *)create_null_obj();
+        }
+        printf("TYPE: %s\n", object_type_strings[array->elements[0]->type()]);
+        return copy_monkey_object(array->elements[0]);
+      }
+    }
+    if (strcmp(builtin->name, "last") == 0) {
+      if (evaluated_expressions_length != 1) {
         error_obj_t *err = create_error_object();
         char *err_string = (char *)malloc(STRING_MAX_SIZE);
         snprintf(err_string, STRING_MAX_SIZE,
-                 "Expected string argument, got type %s\n",
-                 object_type_strings[evaluated_expressions[0]->type()]);
+                 "array last function takes in only 1 argument, got %zu\n",
+                 evaluated_expressions_length);
         err->message = err_string;
         return (object_t *)err;
       }
-      return (object_t *)get_monkey_string_length(
-          (string_obj_t *)evaluated_expressions[0]);
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ) {
+        array_obj_t *array = ((array_obj_t *)evaluated_expressions[0]);
+        if (array->elements_length == 0) {
+          return (object_t *)create_null_obj();
+        }
+        printf("TYPE: %s\n",
+               object_type_strings[array->elements[array->elements_length - 1]
+                                       ->type()]);
+        return copy_monkey_object(array->elements[array->elements_length - 1]);
+      }
+    }
+    if (strcmp(builtin->name, "tail") == 0) {
+      if (evaluated_expressions_length != 1) {
+        error_obj_t *err = create_error_object();
+        char *err_string = (char *)malloc(STRING_MAX_SIZE);
+        snprintf(err_string, STRING_MAX_SIZE,
+                 "array tail function takes in only 1 argument, got %zu\n",
+                 evaluated_expressions_length);
+        err->message = err_string;
+        return (object_t *)err;
+      }
+      if (evaluated_expressions[0]->type() == ARRAY_OBJ) {
+        array_obj_t *array = ((array_obj_t *)evaluated_expressions[0]);
+        if (array->elements_length == 0) {
+          return (object_t *)create_null_obj();
+        }
+        array_obj_t *copied_array =
+            (array_obj_t *)copy_monkey_object((object_t *)array);
+        copied_array->object.type = type_array;
+        copied_array->object.inspect = inspect_array;
+        free(copied_array->elements[0]);
+        copied_array->elements = &copied_array->elements[1];
+        copied_array->elements_length--;
+        return (object_t *)copied_array;
+      }
     }
   }
+
   if (function_literal->type() == ERROR_OBJ) {
     return (object_t *)function_literal;
   }
@@ -461,7 +565,11 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     }
     object_t *val = get_environment(env, identifier->value);
     if (val == NULL) {
-      if (strcmp(identifier->value, "len") == 0) {
+      if (strcmp(identifier->value, "len") == 0 ||
+          strcmp(identifier->value, "first") == 0 ||
+          strcmp(identifier->value, "last") == 0 ||
+          strcmp(identifier->value, "tail") == 0 ||
+          strcmp(identifier->value, "map") == 0) {
         builtin_obj_t *builtin = (builtin_obj_t *)malloc(sizeof(builtin_obj_t));
         builtin->object.inspect = inspect_builtin;
         builtin->object.type = type_builtin;
@@ -502,6 +610,7 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
     return (object_t *)eval_function_expression(func_expression, env);
   }
   case CALL_EXPRESSION: {
+    printf("Inside call\n");
     call_expression_t *call_expression = (call_expression_t *)expression;
     return (object_t *)eval_call_expression(call_expression, env);
   }

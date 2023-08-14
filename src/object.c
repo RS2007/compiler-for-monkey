@@ -321,9 +321,6 @@ void free_object(object_t *object) {
     break;
   }
   case BUILTIN_OBJ: {
-    builtin_obj_t *builtin = (builtin_obj_t *)object;
-    FREE(builtin->name);
-    FREE(builtin);
     break;
   }
   }
