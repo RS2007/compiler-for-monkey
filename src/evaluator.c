@@ -168,7 +168,6 @@ object_t *apply_function(expression_t *function,
         if (array->elements_length == 0) {
           return (object_t *)create_null_obj();
         }
-        printf("TYPE: %s\n", object_type_strings[array->elements[0]->type()]);
         return copy_monkey_object(array->elements[0]);
       }
     }
@@ -187,9 +186,6 @@ object_t *apply_function(expression_t *function,
         if (array->elements_length == 0) {
           return (object_t *)create_null_obj();
         }
-        printf("TYPE: %s\n",
-               object_type_strings[array->elements[array->elements_length - 1]
-                                       ->type()]);
         return copy_monkey_object(array->elements[array->elements_length - 1]);
       }
     }

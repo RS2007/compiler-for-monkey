@@ -15,6 +15,11 @@ int main(int argc, char *argv[]) {
     repl();
     return 0;
   }
+  char *extension = strchr(argv[1], '.');
+  if (!(extension && (strcmp(extension, ".monkey") == 0))) {
+    fprintf(stderr, "Monkey files should end with a .monkey extension\n");
+    exit(1);
+  }
   file = fopen(argv[1], "r");
   if (file == NULL) {
     fprintf(stderr, "Error opening file");
