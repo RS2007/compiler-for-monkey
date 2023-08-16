@@ -51,7 +51,8 @@ static int test_eval_integer_expression() {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
     if (!test_integer_object(evaluated, curr_test.expected)) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed with %lld and %lld",
+              ((integer_t *)evaluated)->value, curr_test.expected);
     }
   }
   fprintf(stdout, "All test cases passed ✅");
@@ -69,7 +70,7 @@ static int test_eval_boolean_expression() {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
     if (!test_boolean_object(evaluated, curr_test.expected)) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed for boolean");
     }
   }
   fprintf(stdout, "All test cases passed ✅");
@@ -91,7 +92,7 @@ static int test_bang_operator() {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
     if (!test_boolean_object(evaluated, curr_test.expected)) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed at testing bang");
       exit(-1);
     }
   }
@@ -110,7 +111,7 @@ static int test_prefix_minus_operator() {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
     if (((integer_obj_t *)evaluated)->value != curr_test.value) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed for prefix minus");
       exit(-1);
     }
   }
@@ -143,7 +144,7 @@ static int test_integer_infix_expressions() {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
     if (((integer_obj_t *)evaluated)->value != curr_test.value) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed for integer infix");
       exit(-1);
     }
   }
@@ -181,8 +182,9 @@ static int test_bool_infix_expressions() {
   for (int i = 0; i < tests_size; ++i) {
     test_t curr_test = tests[i];
     object_t *evaluated = test_eval(curr_test.input);
-    if (((integer_obj_t *)evaluated)->value != curr_test.value) {
-      fprintf(stderr, "Test failed");
+    if (((boolean_obj_t *)evaluated)->value != curr_test.value) {
+      fprintf(stderr, "Test failed at bool infix: %d and %d",
+              ((boolean_obj_t *)evaluated)->value, curr_test.value);
       exit(-1);
     }
   }
@@ -207,7 +209,7 @@ int nested_if_with_return() {
   for (int i = 0; i < tests_size; ++i) {
     object_t *evaluated = test_eval(tests[i].input);
     if (((integer_obj_t *)evaluated)->value != tests[i].expected) {
-      fprintf(stderr, "Test failed");
+      fprintf(stderr, "Test failed at nested if with return");
       exit(-1);
     }
   }
@@ -275,14 +277,64 @@ int test_closures(void) {
   return 0;
 }
 
+int test_hash(void) {
+  object_t str_object = {.type = type_string, .inspect = inspect_string};
+  string_obj_t str1 = {
+      .value = "name",
+      .object = str_object,
+  };
+  string_obj_t str2 = {.value = "monkey", .object = str_object};
+  string_obj_t str3 = {.value = "name", .object = str_object};
+  hash_key_t *hash1 = hash_object((object_t *)&str1);
+  hash_key_t *hash2 = hash_object((object_t *)&str2);
+  hash_key_t *hash3 = hash_object((object_t *)&str3);
+  if (hash1->value == hash2->value) {
+    fprintf(stderr, "Hash1 and Hash2 should not be equal");
+    exit(1);
+  }
+  if (hash1->value != hash3->value) {
+    fprintf(stderr, "Hash1 and Hash3 should be equal");
+    exit(1);
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int test_hash_literal(void) {
+  char *input = "let two = \"two\";"
+                "{"
+                "\"one\": 10 - 9,"
+                "two: 1 + 1,"
+                "\"thr\" + \"ee\": 6 / 2,"
+                "4: 4,"
+                "true: 5,"
+                "false: 6"
+                "}";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  environment_t *env = new_environment();
+  object_t *evaluated = eval((node_t *)program_node, env);
+  if (evaluated->type() != HASH_OBJ) {
+    fprintf(stderr, "Expected %s, got %s\n", "HASH",
+            object_type_strings[evaluated->type()]);
+    exit(1);
+  }
+  hash_obj_t *hash_object = (hash_obj_t *)evaluated;
+  printf("%s\n", hash_object->object.inspect((void *)hash_object));
+  return 0;
+}
+
 int main(void) {
-  test_eval_integer_expression();
-  test_eval_boolean_expression();
-  test_bang_operator();
-  test_prefix_minus_operator();
-  test_integer_infix_expressions();
-  test_bool_infix_expressions();
-  test_function_expression();
-  nested_if_with_return();
-  return test_closures();
+  // test_eval_integer_expression();
+  // test_eval_boolean_expression();
+  // test_bang_operator();
+  // test_prefix_minus_operator();
+  // test_integer_infix_expressions();
+  // test_bool_infix_expressions();
+  // test_function_expression();
+  // nested_if_with_return();
+  // test_closures();
+  // test_hash();
+  return test_hash_literal();
 }

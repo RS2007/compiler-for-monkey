@@ -1,9 +1,15 @@
 #pragma once
 typedef struct object_t object_t;
+typedef struct statement_t statement_t;
+typedef struct block_statement_t block_statement_t;
+typedef struct expression_t expression_t;
 typedef struct environment_t environment_t;
+typedef struct hash_table_pointer_expression_t hash_table_pointer_expression_t;
+typedef struct hash_table_object_object_t hash_table_object_object_t;
 
-#include "nodes.h"
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef enum object_type {
   INTEGER,
@@ -14,15 +20,16 @@ typedef enum object_type {
   ERROR_OBJ,
   STRING_OBJ,
   BUILTIN_OBJ,
-  ARRAY_OBJ
+  ARRAY_OBJ,
+  HASH_OBJ,
 } object_type;
 
 typedef object_type (*Type)();
 typedef char *(*Inspect)(void *);
 
-static char *object_type_strings[] = {"INTEGER", "BOOLEAN", "FUNCTION",
-                                      "NULL",    "RETURN",  "ERROR",
-                                      "STRING",  "BUILTIN", "ARRAY"};
+static char *object_type_strings[] = {
+    "INTEGER", "BOOLEAN", "FUNCTION", "NULL",  "RETURN",
+    "ERROR",   "STRING",  "BUILTIN",  "ARRAY", "HASH"};
 
 typedef struct object_t {
   Type type;
@@ -79,6 +86,23 @@ typedef struct array_obj_t {
   size_t elements_capacity;
 } array_obj_t;
 
+typedef struct hash_pair_t {
+  object_t *key;
+  object_t *value;
+} hash_pair_t;
+
+typedef struct hash_key_t {
+  object_type type;
+  uint64_t value;
+} hash_key_t;
+
+typedef struct hash_obj_t {
+  object_t object;
+  hash_table_object_object_t *pairs;
+} hash_obj_t;
+
+hash_key_t *hash_object(object_t *);
+
 object_type type_int();
 object_type type_boolean();
 object_type type_function();
@@ -88,6 +112,7 @@ object_type type_error();
 object_type type_string();
 object_type type_builtin();
 object_type type_array();
+object_type type_hash();
 char *inspect_int(void *);
 char *inspect_boolean(void *);
 char *inspect_function(void *);
@@ -97,6 +122,7 @@ char *inspect_error(void *);
 char *inspect_string(void *);
 char *inspect_builtin(void *);
 char *inspect_array(void *);
+char *inspect_hash(void *);
 void free_object(object_t *);
 void free_statement(statement_t *);
 void free_expression(expression_t *);

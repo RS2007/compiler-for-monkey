@@ -1,6 +1,4 @@
-#ifndef TOKEN_H
-#define TOKEN_H
-
+#pragma once
 typedef enum token_type {
   ILLEGAL,
   END_OF_FILE,
@@ -44,7 +42,9 @@ typedef enum token_type {
   STRING,
   // ARRAY
   LBRACKET,
-  RBRACKET
+  RBRACKET,
+  // COLON
+  COLON,
 } token_type;
 
 static const char *token_strings[] = {
@@ -52,7 +52,8 @@ static const char *token_strings[] = {
     "BANG",     "MINUS",       "SLASH",  "ASTERIK", "LT",       "GT",
     "COMMA",    "SEMICOLON",   "LPAREN", "RPAREN",  "LBRACE",   "RBRACE",
     "FUNCTION", "LET",         "TRUE",   "FALSE",   "IF",       "ELSE",
-    "RETURN",   "EQ",          "NOT_EQ", "STRING",  "LBRACKET", "RBRACKET"};
+    "RETURN",   "EQ",          "NOT_EQ", "STRING",  "LBRACKET", "RBRACKET",
+    "COLON"};
 
 //#define token_string_from_type(tok_type) token_strings[tok_type]
 // tok_type since token_type is name of enum, not sure if needed
@@ -64,5 +65,3 @@ typedef struct token_t {
 
 token_t *new_token();
 token_type lookup_ident_token(char *);
-
-#endif

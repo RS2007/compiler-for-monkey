@@ -4,6 +4,7 @@
 #include "parser.h"
 #include "utils.h"
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -123,6 +124,29 @@ char *inspect_array(void *array_obj_cast_to_void) {
 }
 
 object_type type_array() { return ARRAY_OBJ; }
+
+char *inspect_hash(void *hash_cast_to_void) {
+  hash_obj_t *hash_obj = (hash_obj_t *)hash_cast_to_void;
+  char *buffer = (char *)malloc(STRING_MAX_SIZE);
+  buffer[0] = '{';
+  buffer[1] = '\0';
+  for (int i = 0; i < hash_obj->pairs->length; ++i) {
+    hash_pair_t *hash_pair = hash_obj->pairs->items[i];
+    if (hash_pair != NULL) {
+      char *key_str = hash_pair->key->inspect((void *)hash_pair->key);
+      char *value_str = hash_pair->value->inspect((void *)hash_pair->value);
+      printf("DEBUG: value_str = %s\n", value_str);
+      strcat(buffer, key_str);
+      strcat(buffer, " : ");
+      strcat(buffer, value_str);
+      strcat(buffer, ",");
+    }
+  }
+  buffer[strlen(buffer) - 1] = '}';
+  return buffer;
+}
+
+object_type type_hash() { return HASH_OBJ; };
 
 void free_identifier(identifier_t *identifier) {
   FREE(identifier->value);
@@ -275,6 +299,45 @@ void free_function_obj(function_obj_t *function_object) {
   free_function_body(function_object->body);
   free_environment(function_object->env);
   FREE(function_object);
+}
+
+uint64_t hash_integer(long long value) { return hash_pointer(value); }
+
+uint64_t hash_string_64(char *str) {
+  uint64_t hash_value;
+  for (hash_value = 0; *str != '\0'; str++)
+    hash_value = *str + hash_value * 63;
+  return hash_value % HASH_TABLE_SIZE;
+}
+uint64_t hash_boolean(bool boolean) { return (uint64_t)boolean; }
+
+hash_key_t *hash_object(object_t *key) {
+  switch (key->type()) {
+  case INTEGER: {
+    integer_obj_t *integer = (integer_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_integer(integer->value);
+    hash_key->type = INTEGER;
+    return hash_key;
+  }
+  case BOOLEAN: {
+    boolean_obj_t *boolean = (boolean_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_boolean(boolean->value);
+    hash_key->type = BOOLEAN;
+    return hash_key;
+  }
+  case STRING_OBJ: {
+    string_obj_t *string = (string_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_string_64(string->value);
+    hash_key->type = STRING_OBJ;
+    return hash_key;
+  }
+  default:
+    assert("Should not hit here");
+  }
+  return NULL;
 }
 
 void free_object(object_t *object) {

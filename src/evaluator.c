@@ -623,6 +623,26 @@ object_t *eval_index_expr(index_expression_t *index_expr, environment_t *env) {
   return array_obj->elements[integer->value];
 }
 
+hash_obj_t *eval_hash_literal(hash_literal_t *hash_literal,
+                              environment_t *env) {
+  hash_obj_t *hash_object = (hash_obj_t *)malloc(sizeof(hash_obj_t));
+  hash_object->object.inspect = inspect_hash;
+  hash_object->object.type = type_hash;
+  hash_object->pairs = create_object_object_hash_table();
+  hash_table_pointer_expression_t *hash_table = hash_literal->pairs;
+  for (int i = 0; i < 5000; ++i) {
+    hash_item_pointer_expression_t *hash_item = hash_table->items[i];
+    if (hash_item != NULL) {
+      expression_t *key_expression = (expression_t *)(hash_item->key);
+      expression_t *value_expression = hash_item->value;
+      object_t *key_obj = eval_expression(key_expression, env);
+      object_t *val_obj = eval_expression(value_expression, env);
+      insert_object_object_hash_table(hash_object->pairs, key_obj, val_obj);
+    }
+  }
+  return hash_object;
+}
+
 object_t *eval_expression(expression_t *expression, environment_t *env) {
   switch (expression->type) {
   case INTEGER_LITERAL: {
@@ -703,6 +723,10 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
   case INDEX_EXPRESSION: {
     index_expression_t *index_expr = (index_expression_t *)expression;
     return (object_t *)eval_index_expr(index_expr, env);
+  }
+  case HASH_LITERAL: {
+    hash_literal_t *hash_literal = (hash_literal_t *)expression;
+    return (object_t *)eval_hash_literal(hash_literal, env);
   }
   }
   return NULL;
