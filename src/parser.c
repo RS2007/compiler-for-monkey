@@ -333,13 +333,18 @@ char *print_hash_literal(void *hash_casted_to_void) {
   buffer[0] = '{';
   buffer[1] = '\0';
   for (int i = 0; i < 5000; ++i) {
-    hash_item_pointer_expression_t *item_val = hash_literal->pairs->items[i];
-    if (item_val != NULL) {
-      char *key_string =
-          ((expression_t *)item_val->key)
-              ->node.string((void *)((expression_t *)item_val->key));
+    generic_linked_list_t *item_val = hash_literal->pairs->items[i];
+    if (item_val == NULL || item_val->head == NULL) {
+      continue;
+    }
+    generic_linked_list_node_t *runner = item_val->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_value = (generic_key_value_t *)runner->data;
+      expression_t *key_expression = (expression_t *)key_value->key;
+      expression_t *value_expression = (expression_t *)key_value->value;
+      char *key_string = key_expression->node.string((void *)key_expression);
       char *value_string =
-          item_val->value->node.string((void *)item_val->value);
+          value_expression->node.string((void *)value_expression);
       strcat(buffer, key_string);
       strcat(buffer, ":");
       strcat(buffer, value_string);
@@ -353,8 +358,8 @@ char *print_hash_literal(void *hash_casted_to_void) {
 expression_t *parse_hash_literal(parser_t *parser) {
   hash_literal_t *hash_literal =
       (hash_literal_t *)malloc(sizeof(hash_literal_t));
-  hash_table_pointer_expression_t *hash_table =
-      create_pointer_expression_hash_table();
+  generic_hash_table_t *hash_table =
+      create_hash_table(HASH_KEY_POINTER_TYPE, HASH_VALUE_TYPE_EXPRESSION);
   hash_literal->expression.type = HASH_LITERAL;
   hash_literal->expression.node.string = print_hash_literal;
   hash_literal->pairs = hash_table;
@@ -373,7 +378,7 @@ expression_t *parse_hash_literal(parser_t *parser) {
     next_token_parser(parser);
     next_token_parser(parser);
     expression_t *value = parse_expression(parser, LOWEST);
-    insert_pointer_expression_hash_table(hash_table, key, value);
+    insert_hash_table(hash_table, (void *)key, value);
     if (!is_peek_token(parser, RBRACE) && !is_peek_token(parser, COMMA)) {
       FREE(hash_literal->pairs);
       FREE(hash_literal);

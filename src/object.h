@@ -4,8 +4,7 @@ typedef struct statement_t statement_t;
 typedef struct block_statement_t block_statement_t;
 typedef struct expression_t expression_t;
 typedef struct environment_t environment_t;
-typedef struct hash_table_pointer_expression_t hash_table_pointer_expression_t;
-typedef struct hash_table_object_object_t hash_table_object_object_t;
+typedef struct generic_hash_table_t generic_hash_table_t;
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -98,7 +97,7 @@ typedef struct hash_key_t {
 
 typedef struct hash_obj_t {
   object_t object;
-  hash_table_object_object_t *pairs;
+  generic_hash_table_t *pairs;
 } hash_obj_t;
 
 hash_key_t *hash_object(object_t *);

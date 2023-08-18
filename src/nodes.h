@@ -175,7 +175,7 @@ typedef struct index_expression_t {
 typedef struct hash_literal_t {
   expression_t expression;
   token_t *token;
-  hash_table_pointer_expression_t *pairs;
+  generic_hash_table_t *pairs;
 } hash_literal_t;
 
 typedef expression_t *(*prefix_parse_function)();
