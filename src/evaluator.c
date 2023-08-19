@@ -629,6 +629,9 @@ array_obj_t *eval_array_literal(array_literal_t *arr_literal,
 
 object_t *eval_index_expr(index_expression_t *index_expr, environment_t *env) {
   object_t *obj = eval_expression(index_expr->left, env);
+  if (obj->type() == ERROR_OBJ) {
+    return obj;
+  }
   assert(obj->type() == ARRAY_OBJ || obj->type() == HASH_OBJ);
   object_t *index = eval_expression(index_expr->index, env);
   if (obj->type() == ARRAY_OBJ) {

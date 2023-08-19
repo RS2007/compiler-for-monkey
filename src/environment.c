@@ -1,4 +1,5 @@
 #include "environment.h"
+#include <string.h>
 
 environment_t *new_environment() {
   environment_t *env = (environment_t *)malloc(sizeof(environment_t));
@@ -10,14 +11,14 @@ environment_t *new_environment() {
 object_t *get_environment(environment_t *environment, char *key) {
   generic_key_value_t *key_value =
       (generic_key_value_t *)get_value_hash_table(environment->store, key);
+  if (key_value == NULL && environment->outer != NULL) {
+
+    return get_environment(environment->outer, key);
+  };
   if (key_value == NULL) {
     return NULL;
   }
   object_t *value = (object_t *)key_value->value;
-  if (value == NULL && environment->outer != NULL) {
-
-    return get_environment(environment->outer, key);
-  };
   return value;
 }
 

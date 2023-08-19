@@ -5,4 +5,4 @@ let fib = fn(x){
   push(arr,answer);
   return answer;
 }; 
-fib(25);
+puts("25th fibonnaci number",fib(25));
