@@ -1,9 +1,10 @@
 #pragma once
 
+#include "object.h"
 #include "utils.h"
 
 typedef struct environment_t {
-  hash_table_t *store;
+  generic_hash_table_t *store;
   environment_t *outer;
 } environment_t;
 
