@@ -1,6 +1,17 @@
 # Current progress
 
-- Functional interpreter with support for function calls,operator precedence, closures and higher order functions
+- Functional interpreter with support for:
+
+1. function calls
+2. operator precedence
+3. closures
+4. higher order functions
+5. primitive data structures with builtin functionality:
+   - string
+   - boolean
+   - integers
+   - hashmaps
+   - arrays
 
 ## Demonstration
 
@@ -44,5 +55,5 @@ fib(15);
 ## TODO
 
 - [x] adding support for strings and arrays
-- [ ] adding support for hashmaps/hashtables
+- [x] adding support for hashmaps/hashtables
 - [ ] build a bytecode compiler
