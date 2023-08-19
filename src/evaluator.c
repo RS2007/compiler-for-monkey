@@ -126,6 +126,23 @@ object_t *apply_function(expression_t *function,
   object_t *function_literal = eval_expression(function, env);
   if (function_literal->type((void *)function_literal) == BUILTIN_OBJ) {
     builtin_obj_t *builtin = (builtin_obj_t *)function_literal;
+    if (strcmp(builtin->name, "puts") == 0) {
+      string_obj_t *str_obj = (string_obj_t *)malloc(sizeof(string_obj_t));
+      str_obj->object.inspect = inspect_string;
+      str_obj->object.type = type_string;
+      str_obj->value = (char *)malloc(STRING_MAX_SIZE);
+      str_obj->value[0] = '\0';
+      for (int i = 0; i < evaluated_expressions_length; ++i) {
+        object_t *evaled_expression = evaluated_expressions[i];
+        strcat(str_obj->value,
+               evaled_expression->inspect((void *)evaled_expression));
+        if (i != evaluated_expressions_length - 1) {
+          strcat(str_obj->value, "\n");
+        }
+      }
+      strcat(str_obj->value, "\0");
+      return (object_t *)str_obj;
+    }
     if (strcmp(builtin->name, "len") == 0) {
       if (evaluated_expressions_length != 1) {
         error_obj_t *err = create_error_object();
@@ -694,7 +711,8 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
           strcmp(identifier->value, "last") == 0 ||
           strcmp(identifier->value, "tail") == 0 ||
           strcmp(identifier->value, "map") == 0 ||
-          strcmp(identifier->value, "push") == 0) {
+          strcmp(identifier->value, "push") == 0 ||
+          strcmp(identifier->value, "puts") == 0) {
         builtin_obj_t *builtin = (builtin_obj_t *)malloc(sizeof(builtin_obj_t));
         builtin->object.inspect = inspect_builtin;
         builtin->object.type = type_builtin;
