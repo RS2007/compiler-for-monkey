@@ -497,7 +497,7 @@ int test_if_expression(void) {
   expression_statement_t *stmt =
       (expression_statement_t *)program_node->statements[0];
   if (stmt->expression->type != IF_EXPRESSION) {
-    assert("This is the problem");
+    assert(0 && "This is the problem");
   }
   if_expression_t *expr = (if_expression_t *)stmt->expression;
   infix_expression_t *condition = (infix_expression_t *)expr->condition;
@@ -930,6 +930,172 @@ int test_index_expression() {
   return 0;
 }
 
+int test_parsing_hash_literal_string_keys(void) {
+  char *input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  if (program_node->statements[0]->type != EXPRESSION_STATEMENT) {
+    fprintf(stderr, "Expected expression statement, got some %d\n",
+            program_node->statements[0]->type);
+    exit(1);
+  }
+  expression_statement_t *expr_statement =
+      (expression_statement_t *)program_node->statements[0];
+  if (expr_statement->expression->type != HASH_LITERAL) {
+    fprintf(stderr, "Expected hash literal, got some %d\n",
+            expr_statement->expression->type);
+    exit(1);
+  }
+  hash_literal_t *hash_literal = (hash_literal_t *)expr_statement->expression;
+  generic_hash_table_t *hash_table = hash_literal->pairs;
+  for (int i = 0; i < 5000; ++i) {
+    generic_linked_list_t *item = hash_table->items[i];
+    generic_linked_list_node_t *runner = item->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_value = (generic_key_value_t *)runner->data;
+      expression_t *key_expression = (expression_t *)key_value->key;
+      expression_t *value_expression = (expression_t *)key_value->value;
+      if (key_expression->type != STRING && value_expression->type != INTEGER) {
+        fprintf(stderr,
+                "Expected string and integer, got some other random thingy");
+        exit(1);
+      }
+      string_literal_t *string_literal = (string_literal_t *)key_expression;
+      integer_t *integer = (integer_t *)value_expression;
+      if (strcmp(string_literal->value, "one") == 0) {
+        if (integer->value != 1) {
+          fprintf(stderr, "Expected 1  got %lld", integer->value);
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      if (strcmp(string_literal->value, "two") == 0) {
+        if (integer->value != 2) {
+          fprintf(stderr, "Expected 2  got %lld", integer->value);
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      if (strcmp(string_literal->value, "three") == 0) {
+        if (integer->value != 3) {
+          fprintf(stderr, "Expected 3  got %lld", integer->value);
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      fprintf(stderr, "Error , got random string literal %s\n",
+              string_literal->value);
+      exit(1);
+    }
+  }
+
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int test_parsing_empty_hash_literal(void) {
+  char *input = "{}";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+
+  expression_statement_t *expr_statement =
+      (expression_statement_t *)(program_node->statements[0]);
+  if (expr_statement->expression->type != HASH_LITERAL) {
+    fprintf(stderr, "Expected hash literal, got some %d\n",
+            expr_statement->expression->type);
+    exit(1);
+  }
+  hash_literal_t *hash_literal = (hash_literal_t *)expr_statement->expression;
+  generic_hash_table_t *hash_table = hash_literal->pairs;
+  for (int i = 0; i < 5000; ++i) {
+    generic_linked_list_t *hash_item = hash_table->items[i];
+    if (hash_item->head != NULL) {
+      fprintf(stderr, "Empty hashmap test failed\n"), exit(1);
+    }
+  }
+  fprintf(stdout, "All test cases passed ✅");
+  return 0;
+}
+
+int test_parsing_hash_literal_string_keys_with_expressions(void) {
+  char *input = "{\"one\": 0+1, \"two\": 10-8, \"three\": 15/5}";
+  lexer_t *lexer = new_lexer(input, strlen(input));
+  parser_t *parser = new_parser(lexer);
+  program_t *program_node = parse_program(parser);
+  if (program_node->statements[0]->type != EXPRESSION_STATEMENT) {
+    fprintf(stderr, "Expected expression statement, got some %d\n",
+            program_node->statements[0]->type);
+    exit(1);
+  }
+  expression_statement_t *expr_statement =
+      (expression_statement_t *)program_node->statements[0];
+  if (expr_statement->expression->type != HASH_LITERAL) {
+    fprintf(stderr, "Expected hash literal, got some %d\n",
+            expr_statement->expression->type);
+    exit(1);
+  }
+  hash_literal_t *hash_literal = (hash_literal_t *)expr_statement->expression;
+  generic_hash_table_t *hash_table = hash_literal->pairs;
+  for (int i = 0; i < 5000; ++i) {
+    generic_linked_list_t *item = hash_table->items[i];
+    generic_linked_list_node_t *runner = item->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_value = (generic_key_value_t *)runner->data;
+      expression_t *key_expression = (expression_t *)(key_value->key);
+      expression_t *value_expression = (expression_t *)(key_value->value);
+      if (key_expression->type != STRING &&
+          value_expression->type != INFIX_EXPRESSION) {
+        fprintf(stderr,
+                "Expected string and integer, got some other random thingy");
+        exit(1);
+      }
+      string_literal_t *string_literal = (string_literal_t *)key_expression;
+      infix_expression_t *integer = (infix_expression_t *)value_expression;
+      if (strcmp(string_literal->value, "one") == 0) {
+        if (((integer_t *)(integer->left))->value != 0 &&
+            strcmp(integer->op, "+") == 0 &&
+            ((integer_t *)(integer->right))->value != 1) {
+          fprintf(stderr, "Too lazy to write good error messages");
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      if (strcmp(string_literal->value, "two") == 0) {
+        if (((integer_t *)(integer->left))->value != 10 &&
+            strcmp(integer->op, "-") == 0 &&
+            ((integer_t *)(integer->right))->value != 8) {
+          fprintf(stderr, "Too lazy to write good error messages");
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      if (strcmp(string_literal->value, "three") == 0) {
+        if (((integer_t *)(integer->left))->value != 15 &&
+            strcmp(integer->op, "/") == 0 &&
+            ((integer_t *)(integer->right))->value != 5) {
+          fprintf(stderr, "Too lazy to write good error messages");
+          exit(1);
+        }
+        runner = runner->next;
+        continue;
+      }
+      fprintf(stderr, "Error , got random string literal %s\n",
+              string_literal->value);
+      exit(1);
+    }
+  }
+  fprintf(stdout, "\nAll test cases passed ✅ for "
+                  "test_parsing_hash_literal_string_keys_with_expressions");
+  return 0;
+}
+
 int main(void) {
   test_let_statements();
   test_if_expression();
@@ -948,5 +1114,8 @@ int main(void) {
   test_function_literal_with_multiple_arguments();
   test_parsing_string();
   test_parsing_array();
-  return test_index_expression();
+  test_index_expression();
+  test_parsing_hash_literal_string_keys();
+  test_parsing_empty_hash_literal();
+  return test_parsing_hash_literal_string_keys_with_expressions();
 }

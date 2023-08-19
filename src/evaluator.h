@@ -1,3 +1,5 @@
+#pragma once
+
 #include "environment.h"
 #include "nodes.h"
 #include "object.h"

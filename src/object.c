@@ -4,6 +4,7 @@
 #include "parser.h"
 #include "utils.h"
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -124,6 +125,35 @@ char *inspect_array(void *array_obj_cast_to_void) {
 
 object_type type_array() { return ARRAY_OBJ; }
 
+char *inspect_hash(void *hash_cast_to_void) {
+  hash_obj_t *hash_obj = (hash_obj_t *)hash_cast_to_void;
+  char *buffer = (char *)malloc(STRING_MAX_SIZE);
+  buffer[0] = '{';
+  buffer[1] = '\0';
+  for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+    generic_linked_list_t *hash_pair = hash_obj->pairs->items[i];
+    if (hash_pair == NULL || hash_pair->head == NULL) {
+      continue;
+    }
+    generic_linked_list_node_t *runner = hash_pair->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_value = (generic_key_value_t *)runner->data;
+      hash_pair_t *value_obj = (hash_pair_t *)key_value->value;
+      char *key_str = value_obj->key->inspect((void *)value_obj->key);
+      char *value_str = value_obj->value->inspect((void *)value_obj->value);
+      strcat(buffer, key_str);
+      strcat(buffer, " : ");
+      strcat(buffer, value_str);
+      strcat(buffer, ",");
+      runner = runner->next;
+    }
+  }
+  buffer[strlen(buffer) - 1] = '}';
+  return buffer;
+}
+
+object_type type_hash() { return HASH_OBJ; };
+
 void free_identifier(identifier_t *identifier) {
   FREE(identifier->value);
   FREE(identifier->token);
@@ -180,7 +210,7 @@ void free_expression(expression_t *expression) {
     integer_t *integer = (integer_t *)expression;
     FREE(integer->token);
     if (integer == NULL)
-      assert("This is wrong");
+      assert(0 && "This is wrong");
     FREE(integer);
     break;
   }
@@ -262,8 +292,14 @@ void free_environment(environment_t *env) {
   }
   FREE(env->outer);
   for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
-    if (env->store->items[i] != NULL) {
-      env->store->items[i]->value->refcount--;
+    if (env->store->items[i]->head != NULL) {
+      generic_linked_list_node_t *runner = env->store->items[i]->head;
+      while (runner != NULL) {
+        FREE(runner->data);
+        generic_linked_list_node_t *old_runner = runner;
+        runner = runner->next;
+        FREE(old_runner);
+      }
     }
   }
   free_hash_table(env->store);
@@ -275,6 +311,45 @@ void free_function_obj(function_obj_t *function_object) {
   free_function_body(function_object->body);
   free_environment(function_object->env);
   FREE(function_object);
+}
+
+uint64_t hash_integer(long long value) { return hash_pointer(value); }
+
+uint64_t hash_string_64(char *str) {
+  uint64_t hash_value;
+  for (hash_value = 0; *str != '\0'; str++)
+    hash_value = *str + hash_value * 63;
+  return hash_value % HASH_TABLE_SIZE;
+}
+uint64_t hash_boolean(bool boolean) { return (uint64_t)boolean; }
+
+hash_key_t *hash_object(object_t *key) {
+  switch (key->type()) {
+  case INTEGER: {
+    integer_obj_t *integer = (integer_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_integer(integer->value);
+    hash_key->type = INTEGER;
+    return hash_key;
+  }
+  case BOOLEAN: {
+    boolean_obj_t *boolean = (boolean_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_boolean(boolean->value);
+    hash_key->type = BOOLEAN;
+    return hash_key;
+  }
+  case STRING_OBJ: {
+    string_obj_t *string = (string_obj_t *)key;
+    hash_key_t *hash_key = malloc(sizeof(hash_key_t));
+    hash_key->value = hash_string_64(string->value);
+    hash_key->type = STRING_OBJ;
+    return hash_key;
+  }
+  default:
+    assert(0 && "Should not hit here");
+  }
+  return NULL;
 }
 
 void free_object(object_t *object) {

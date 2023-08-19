@@ -38,7 +38,7 @@ static integer_obj_t *new_integer_obj(long long value) {
 object_t *eval_if_expression(if_expression_t *if_expr, environment_t *env) {
   object_t *condition_obj = eval_expression(if_expr->condition, env);
   if (condition_obj->type() != BOOLEAN) {
-    assert("Condition should evaluate to a boolean");
+    assert(0 && "Condition should evaluate to a boolean");
   }
   bool is_condition_true = ((boolean_obj_t *)condition_obj)->value;
 
@@ -590,7 +590,7 @@ object_t *eval_prefix_expression(prefix_expression_t *prefix_expr,
     return_integer_obj->object.inspect = inspect_int;
     return (object_t *)return_integer_obj;
   } else {
-    assert("Should not be here");
+    assert(0 && "Should not be here");
   }
   return NULL;
 }
@@ -621,6 +621,37 @@ object_t *eval_index_expr(index_expression_t *index_expr, environment_t *env) {
     return (object_t *)create_null_obj();
   }
   return array_obj->elements[integer->value];
+}
+
+hash_obj_t *eval_hash_literal(hash_literal_t *hash_literal,
+                              environment_t *env) {
+  hash_obj_t *hash_obj = (hash_obj_t *)malloc(sizeof(hash_obj_t));
+  hash_obj->object.inspect = inspect_hash;
+  hash_obj->object.type = type_hash;
+  hash_obj->pairs =
+      create_hash_table(HASH_KEY_HASH_KEY_TYPE, HASH_VALUE_TYPE_HASH_PAIR);
+  generic_hash_table_t *hash_table = hash_literal->pairs;
+  for (int i = 0; i < 5000; ++i) {
+    generic_linked_list_t *hash_item = hash_table->items[i];
+    if (hash_item == NULL || hash_item->head == NULL) {
+      continue;
+    }
+    generic_linked_list_node_t *runner = hash_item->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_val = (generic_key_value_t *)runner->data;
+      object_t *evaled_key = eval_expression((expression_t *)key_val->key, env);
+      object_t *evaled_value =
+          eval_expression((expression_t *)key_val->value, env);
+      hash_key_t *hash_key = (hash_key_t *)malloc(sizeof(hash_key_t));
+      hash_key->value = (uint64_t)hash_object(evaled_key);
+      hash_pair_t *hash_pair = (hash_pair_t *)malloc(sizeof(hash_pair_t));
+      hash_pair->key = evaled_key;
+      hash_pair->value = evaled_value;
+      insert_hash_table(hash_obj->pairs, hash_key, hash_pair);
+      runner = runner->next;
+    }
+  }
+  return hash_obj;
 }
 
 object_t *eval_expression(expression_t *expression, environment_t *env) {
@@ -703,6 +734,10 @@ object_t *eval_expression(expression_t *expression, environment_t *env) {
   case INDEX_EXPRESSION: {
     index_expression_t *index_expr = (index_expression_t *)expression;
     return (object_t *)eval_index_expr(index_expr, env);
+  }
+  case HASH_LITERAL: {
+    hash_literal_t *hash_literal = (hash_literal_t *)expression;
+    return (object_t *)eval_hash_literal(hash_literal, env);
   }
   }
   return NULL;

@@ -327,6 +327,73 @@ expression_t *parse_expression(parser_t *parser, precedence_t precedence) {
   return left_expression;
 }
 
+char *print_hash_literal(void *hash_casted_to_void) {
+  hash_literal_t *hash_literal = (hash_literal_t *)hash_casted_to_void;
+  char *buffer = malloc(STRING_MAX_SIZE);
+  buffer[0] = '{';
+  buffer[1] = '\0';
+  for (int i = 0; i < 5000; ++i) {
+    generic_linked_list_t *item_val = hash_literal->pairs->items[i];
+    if (item_val == NULL || item_val->head == NULL) {
+      continue;
+    }
+    generic_linked_list_node_t *runner = item_val->head;
+    while (runner != NULL) {
+      generic_key_value_t *key_value = (generic_key_value_t *)runner->data;
+      expression_t *key_expression = (expression_t *)key_value->key;
+      expression_t *value_expression = (expression_t *)key_value->value;
+      char *key_string = key_expression->node.string((void *)key_expression);
+      char *value_string =
+          value_expression->node.string((void *)value_expression);
+      strcat(buffer, key_string);
+      strcat(buffer, ":");
+      strcat(buffer, value_string);
+      strcat(buffer, ",");
+    }
+  }
+  buffer[strlen(buffer) - 1] = '}';
+  return buffer;
+}
+
+expression_t *parse_hash_literal(parser_t *parser) {
+  hash_literal_t *hash_literal =
+      (hash_literal_t *)malloc(sizeof(hash_literal_t));
+  generic_hash_table_t *hash_table =
+      create_hash_table(HASH_KEY_POINTER_TYPE, HASH_VALUE_TYPE_EXPRESSION);
+  hash_literal->expression.type = HASH_LITERAL;
+  hash_literal->expression.node.string = print_hash_literal;
+  hash_literal->pairs = hash_table;
+  hash_literal->token = parser->curr_token;
+  while (!is_curr_token(parser, RBRACE)) {
+    next_token_parser(parser);
+    if (is_curr_token(parser, RBRACE)) {
+      break;
+    }
+    uint64_t key = (uint64_t)parse_expression(parser, LOWEST);
+    if (!is_peek_token(parser, COLON)) {
+      FREE(hash_literal->pairs);
+      FREE(hash_literal);
+      return NULL;
+    }
+    next_token_parser(parser);
+    next_token_parser(parser);
+    expression_t *value = parse_expression(parser, LOWEST);
+    insert_hash_table(hash_table, (void *)key, value);
+    if (!is_peek_token(parser, RBRACE) && !is_peek_token(parser, COMMA)) {
+      FREE(hash_literal->pairs);
+      FREE(hash_literal);
+      return NULL;
+    }
+    next_token_parser(parser);
+  }
+  if (!is_curr_token(parser, RBRACE)) {
+    FREE(hash_literal->pairs);
+    FREE(hash_literal);
+    return NULL;
+  }
+  return (expression_t *)hash_literal;
+}
+
 char *print_index_expression(void *index_expr_cast_to_void) {
   index_expression_t *index_expr =
       (index_expression_t *)index_expr_cast_to_void;

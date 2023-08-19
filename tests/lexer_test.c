@@ -24,26 +24,28 @@ int main(void) {
                 "10 != 9;"
                 "10 == 5 + 5;"
                 "\"Hello\";"
-                "array[2];";
+                "array[2];"
+                "{\"foo\":\"bar\"};";
   const char *results[] = {
-      "LET",       "IDENT",      "ASSIGN",    "INT",       "SEMICOLON",
-      "LET",       "IDENT",      "ASSIGN",    "INT",       "SEMICOLON",
-      "LET",       "IDENT",      "ASSIGN",    "FUNCTION",  "LPAREN",
-      "IDENT",     "COMMA",      "IDENT",     "RPAREN",    "LBRACE",
-      "IDENT",     "PLUS",       "IDENT",     "SEMICOLON", "RBRACE",
-      "LET",       "IDENT",      "ASSIGN",    "IDENT",     "LPAREN",
-      "IDENT",     "COMMA",      "IDENT",     "RPAREN",    "SEMICOLON",
-      "BANG",      "MINUS",      "SLASH",     "ASTERIK",   "INT",
-      "SEMICOLON", "INT",        "LT",        "INT",       "GT",
-      "INT",       "SEMICOLON",  "IF",        "LPAREN",    "INT",
-      "LT",        "INT",        "RPAREN",    "LBRACE",    "RETURN",
-      "TRUE",      "SEMICOLON",  "RBRACE",    "IF",        "LPAREN",
-      "INT",       "GT",         "INT",       "RPAREN",    "LBRACE",
-      "RETURN",    "FALSE",      "SEMICOLON", "RBRACE",    "INT",
-      "NOT_EQ",    "INT",        "SEMICOLON", "INT",       "EQ",
-      "INT",       "PLUS",       "INT",       "SEMICOLON", "STRING",
-      "SEMICOLON", "IDENT",      "LBRACKET",  "INT",       "RBRACKET",
-      "SEMICOLON", "END_OF_FILE"};
+      "LET",       "IDENT",     "ASSIGN",     "INT",       "SEMICOLON",
+      "LET",       "IDENT",     "ASSIGN",     "INT",       "SEMICOLON",
+      "LET",       "IDENT",     "ASSIGN",     "FUNCTION",  "LPAREN",
+      "IDENT",     "COMMA",     "IDENT",      "RPAREN",    "LBRACE",
+      "IDENT",     "PLUS",      "IDENT",      "SEMICOLON", "RBRACE",
+      "LET",       "IDENT",     "ASSIGN",     "IDENT",     "LPAREN",
+      "IDENT",     "COMMA",     "IDENT",      "RPAREN",    "SEMICOLON",
+      "BANG",      "MINUS",     "SLASH",      "ASTERIK",   "INT",
+      "SEMICOLON", "INT",       "LT",         "INT",       "GT",
+      "INT",       "SEMICOLON", "IF",         "LPAREN",    "INT",
+      "LT",        "INT",       "RPAREN",     "LBRACE",    "RETURN",
+      "TRUE",      "SEMICOLON", "RBRACE",     "IF",        "LPAREN",
+      "INT",       "GT",        "INT",        "RPAREN",    "LBRACE",
+      "RETURN",    "FALSE",     "SEMICOLON",  "RBRACE",    "INT",
+      "NOT_EQ",    "INT",       "SEMICOLON",  "INT",       "EQ",
+      "INT",       "PLUS",      "INT",        "SEMICOLON", "STRING",
+      "SEMICOLON", "IDENT",     "LBRACKET",   "INT",       "RBRACKET",
+      "SEMICOLON", "LBRACE",    "STRING",     "COLON",     "STRING",
+      "RBRACE",    "SEMICOLON", "END_OF_FILE"};
 
   int input_size = strlen(input);
   lexer_t *lexer = new_lexer(input, input_size);

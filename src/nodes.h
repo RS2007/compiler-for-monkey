@@ -1,7 +1,9 @@
 #pragma once
 
 #include "token.h"
+#include "utils.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +32,7 @@ typedef enum expression_type {
   STRING_LITERAL,
   ARRAY_LITERAL,
   INDEX_EXPRESSION,
+  HASH_LITERAL,
 } expression_type;
 
 typedef char *(*Token_literal)(void *);
@@ -169,6 +172,12 @@ typedef struct index_expression_t {
   expression_t *index;
 } index_expression_t;
 
+typedef struct hash_literal_t {
+  expression_t expression;
+  token_t *token;
+  generic_hash_table_t *pairs;
+} hash_literal_t;
+
 typedef expression_t *(*prefix_parse_function)();
 typedef expression_t *(*infix_parse_function)();
 
@@ -182,43 +191,21 @@ expression_t *parse_function_expression();
 expression_t *parse_call_expression();
 expression_t *parse_string_literal();
 expression_t *parse_array_literal();
+expression_t *parse_hash_literal();
 
 expression_t *parse_infix_function();
 expression_t *parse_index_expression();
 
 static prefix_parse_function prefix_parse_functions[] = {
-    NULL,
-    NULL,
-    parse_identifier,
-    parse_integer_literal,
-    NULL,
-    NULL,
-    parse_prefix_expression,
-    parse_prefix_expression,
-    NULL,
-    NULL,
-    parse_prefix_expression,
-    parse_prefix_expression,
-    NULL,
-    NULL,
-    parse_grouped_expression,
-    NULL,
-    NULL,
-    NULL,
-    parse_function_expression,
-    NULL,
-    parse_boolean_expression,
-    parse_boolean_expression,
-    parse_if_expression,
-    NULL,
-    NULL,
-    NULL,
+    NULL, NULL, parse_identifier, parse_integer_literal, NULL, NULL,
+    parse_prefix_expression, parse_prefix_expression, NULL, NULL,
+    parse_prefix_expression, parse_prefix_expression, NULL, NULL,
+    parse_grouped_expression, NULL, parse_hash_literal, NULL,
+    parse_function_expression, NULL, parse_boolean_expression,
+    parse_boolean_expression, parse_if_expression, NULL, NULL, NULL,
 
     // Equality
-    NULL,
-    parse_string_literal,
-    parse_array_literal,
-};
+    NULL, parse_string_literal, parse_array_literal, NULL, NULL};
 
 static infix_parse_function infix_parse_functions[] = {
     NULL, NULL, NULL, NULL, NULL,

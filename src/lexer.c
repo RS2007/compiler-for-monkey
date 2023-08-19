@@ -175,6 +175,11 @@ token_t *next_token_lexer(lexer_t *lexer) {
     token->literal = strdup("]");
     read_char_lexer(lexer);
     break;
+  case ':':
+    token->type = COLON;
+    token->literal = strdup(":");
+    read_char_lexer(lexer);
+    break;
   case '\0':
     token->literal = "";
     token->type = END_OF_FILE;
