@@ -328,21 +328,21 @@ hash_key_t *hash_object(object_t *key) {
   case INTEGER: {
     integer_obj_t *integer = (integer_obj_t *)key;
     hash_key_t *hash_key = malloc(sizeof(hash_key_t));
-    hash_key->value = hash_integer(integer->value);
+    hash_key->value = hash_integer(integer->value) % HASH_TABLE_SIZE;
     hash_key->type = INTEGER;
     return hash_key;
   }
   case BOOLEAN: {
     boolean_obj_t *boolean = (boolean_obj_t *)key;
     hash_key_t *hash_key = malloc(sizeof(hash_key_t));
-    hash_key->value = hash_boolean(boolean->value);
+    hash_key->value = hash_boolean(boolean->value) % HASH_TABLE_SIZE;
     hash_key->type = BOOLEAN;
     return hash_key;
   }
   case STRING_OBJ: {
     string_obj_t *string = (string_obj_t *)key;
     hash_key_t *hash_key = malloc(sizeof(hash_key_t));
-    hash_key->value = hash_string_64(string->value);
+    hash_key->value = hash_string_64(string->value) % HASH_TABLE_SIZE;
     hash_key->type = STRING_OBJ;
     return hash_key;
   }

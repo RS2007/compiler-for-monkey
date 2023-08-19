@@ -80,13 +80,13 @@ void push_linked_list(generic_linked_list_t *ll, void *value) {
 uint64_t generic_hash(hash_key_type type, void *key) {
   switch (type) {
   case HASH_KEY_POINTER_TYPE: {
-    return hash_pointer((uint64_t)key);
+    return hash_pointer((uint64_t)key) % HASH_TABLE_SIZE;
   }
   case HASH_KEY_HASH_KEY_TYPE: {
-    return hash_hash_key_t((hash_key_t *)key);
+    return ((hash_key_t *)key)->value % HASH_TABLE_SIZE;
   }
   case HASH_KEY_STRING_TYPE: {
-    return hash_string((char *)key);
+    return hash_string((char *)key) % HASH_TABLE_SIZE;
   }
   default: {
     assert(0 && "Unsupported");

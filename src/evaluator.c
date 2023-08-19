@@ -612,15 +612,31 @@ array_obj_t *eval_array_literal(array_literal_t *arr_literal,
 
 object_t *eval_index_expr(index_expression_t *index_expr, environment_t *env) {
   object_t *obj = eval_expression(index_expr->left, env);
-  assert(obj->type() == ARRAY_OBJ);
-  array_obj_t *array_obj = (array_obj_t *)obj;
+  assert(obj->type() == ARRAY_OBJ || obj->type() == HASH_OBJ);
   object_t *index = eval_expression(index_expr->index, env);
-  assert(index->type() == INTEGER);
-  integer_obj_t *integer = (integer_obj_t *)index;
-  if (integer->value + 1 > array_obj->elements_length) {
-    return (object_t *)create_null_obj();
+  if (obj->type() == ARRAY_OBJ) {
+    assert(index->type() == INTEGER);
+    array_obj_t *array_obj = (array_obj_t *)obj;
+    integer_obj_t *integer = (integer_obj_t *)index;
+    if (integer->value + 1 > array_obj->elements_length) {
+      return (object_t *)create_null_obj();
+    }
+    return array_obj->elements[integer->value];
   }
-  return array_obj->elements[integer->value];
+  if (obj->type() == HASH_OBJ) {
+    hash_obj_t *hash_obj = (hash_obj_t *)obj;
+    hash_key_t *hash_key = hash_object(index);
+    generic_key_value_t *key_value =
+        get_value_hash_table(hash_obj->pairs, hash_key);
+    hash_pair_t *hash_pair = key_value->value;
+    object_t *value = hash_pair->value;
+    if (value != NULL) {
+      return (object_t *)value;
+    } else {
+      return (object_t *)create_null_obj();
+    }
+  }
+  assert(0 && "Should not hit here");
 }
 
 hash_obj_t *eval_hash_literal(hash_literal_t *hash_literal,
@@ -642,8 +658,7 @@ hash_obj_t *eval_hash_literal(hash_literal_t *hash_literal,
       object_t *evaled_key = eval_expression((expression_t *)key_val->key, env);
       object_t *evaled_value =
           eval_expression((expression_t *)key_val->value, env);
-      hash_key_t *hash_key = (hash_key_t *)malloc(sizeof(hash_key_t));
-      hash_key->value = (uint64_t)hash_object(evaled_key);
+      hash_key_t *hash_key = hash_object(evaled_key);
       hash_pair_t *hash_pair = (hash_pair_t *)malloc(sizeof(hash_pair_t));
       hash_pair->key = evaled_key;
       hash_pair->value = evaled_value;
