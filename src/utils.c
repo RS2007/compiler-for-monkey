@@ -179,20 +179,3 @@ void *get_value_hash_table(generic_hash_table_t *hash_table, void *key) {
       generic_linked_list_search(hash_table->items[hash_key], key);
   return node == NULL ? NULL : node->data;
 }
-
-expression_t *
-get_pointer_expression_hash_table(hash_table_pointer_expression_t *hash_table,
-                                  uint64_t key) {
-  uint64_t hash_value = hash_pointer(key);
-  return hash_table->items[hash_value] == NULL
-             ? NULL
-             : hash_table->items[hash_value]->value;
-}
-
-hash_pair_t *get_hash_pair_hash_table(hash_table_object_object_t *hash_table,
-                                      object_t *key) {
-  hash_key_t *hash_key = hash_object(key);
-  return hash_table->items[hash_key->value] == NULL
-             ? NULL
-             : hash_table->items[hash_key->value];
-}
