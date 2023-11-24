@@ -145,7 +145,7 @@ char *print_function_string(void *function_expression_cast_to_void) {
 precedence_t peek_precedence(parser_t *parser) {
   precedence_t precedence = precedences_array[parser->peek_token->type];
   // TODO: fix this lint error
-  if (precedence != NULL) {
+  if ((void *)precedence != NULL) {
     return precedence;
   }
   return LOWEST;
@@ -154,7 +154,7 @@ precedence_t peek_precedence(parser_t *parser) {
 precedence_t curr_precedence(parser_t *parser) {
   precedence_t precedence = precedences_array[parser->curr_token->type];
   // TODO: fix this lint error
-  if (precedence != NULL) {
+  if ((void *)precedence != NULL) {
     return precedence;
   }
   return LOWEST;
@@ -218,14 +218,14 @@ char *program_token_literal(void *program_cast_to_void) {
 char *let_token_literal(void *let_statement_cast_to_void) {
   let_statement_t *let_statement =
       (let_statement_t *)let_statement_cast_to_void;
-  return token_strings[let_statement->token->type];
+  return (char *)token_strings[let_statement->token->type];
 }
 
 char *ret_token_literal(void *ret_statement_cast_to_void) {
   // TODO: is it possible to make a abstracted token literal function
   ret_statement_t *ret_statement =
       (ret_statement_t *)ret_statement_cast_to_void;
-  return token_strings[ret_statement->token->type];
+  return (char *)token_strings[ret_statement->token->type];
 }
 
 char *expression_token_literal(void *expression_statement_cast_to_void) {
