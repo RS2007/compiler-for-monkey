@@ -4,3 +4,7 @@ bin
 .nvim
 TODO.md
 Architecture.md
+perf.data
+perf.data.old
+zig-cache/
+valgrind-out.txt

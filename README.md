@@ -1,5 +1,7 @@
 # Current progress
 
+> I like zig and hence the bytecode VM will be in zig. Friendship ended with make, now build.zig is my best friend.
+
 - Functional interpreter with support for:
 
 1. function calls

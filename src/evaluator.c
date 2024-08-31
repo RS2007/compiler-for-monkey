@@ -2,6 +2,7 @@
 #include "nodes.h"
 #include "object.h"
 #include "utils.h"
+#include "vm.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -554,7 +555,7 @@ eval_infix_expression (infix_expression_t *infix_expr, environment_t *env)
             integer_obj_t *right_int = (integer_obj_t *)right_obj;
             integer_obj_t *return_obj
                 = (integer_obj_t *)malloc (sizeof (integer_obj_t));
-            return_obj->value = left_int->value + right_int->value;
+            return_obj->value = add (left_int->value, right_int->value);
             return_obj->object.type = type_int;
             return_obj->object.inspect = inspect_int;
             return (object_t *)return_obj;

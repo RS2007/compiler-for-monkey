@@ -1,4 +1,4 @@
-CC = gcc
+CC = zig cc
 DEBUGGER = gdb
 C_FLAGS = -Wall -g -ggdb3 -pedantic
 SRC_FOLDER = ./src
