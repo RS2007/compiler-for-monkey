@@ -8,3 +8,5 @@ perf.data
 perf.data.old
 zig-cache/
 valgrind-out.txt
+build_old.zig
+zls.json

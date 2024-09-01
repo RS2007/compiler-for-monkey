@@ -1,10 +1,28 @@
 const std = @import("std");
-const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // Add a command-line option to choose the build function
+    const build_mode = b.option(
+        []const u8,
+        "mode",
+        "Choose build mode: default or alternative",
+    ) orelse "default";
+
+    // Call the appropriate build function based on the mode
+    if (std.mem.eql(u8, build_mode, "default")) {
+        defaultBuild(b, target, optimize);
+    } else if (std.mem.eql(u8, build_mode, "alternative")) {
+        alternativeBuild(b, target, optimize);
+    } else {
+        std.debug.print("Unknown build mode: {s}\n", .{build_mode});
+        std.process.exit(1);
+    }
+}
+
+fn defaultBuild(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode) void {
     const exe = b.addExecutable(.{
         .name = "mc",
         .target = target,
@@ -77,4 +95,22 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+}
+
+fn alternativeBuild(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode) void {
+    const test_step = b.step("test", "Run alternative unit tests");
+    std.log.warn("Running alternative", .{});
+
+    const tests = b.addTest(.{
+        .root_source_file = .{ .path = "src/compiler.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+    tests.addIncludePath(.{ .path = "./src" });
+    tests.addCSourceFiles(&[_][]const u8{ "src/lexer.c", "src/object.c", "src/utils.c", "src/token.c", "src/parser.c" }, &[_][]const u8{});
+    tests.linkLibC();
+
+    const run_tests = b.addRunArtifact(tests);
+    run_tests.has_side_effects = true;
+    test_step.dependOn(&run_tests.step);
 }
