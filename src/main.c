@@ -34,7 +34,7 @@ main (int argc, char *argv[])
     fseek (file, 0, SEEK_END);
     file_size = ftell (file);
     rewind (file);
-    buffer = (char *)malloc (file_size + 1);
+    buffer = (char *)calloc (file_size + 1, 1);
     if (buffer == NULL)
         {
             fprintf (stderr, "Error allocating memory");
@@ -72,7 +72,7 @@ main (int argc, char *argv[])
     free_object (object);
     free_lexer (lexer);
     free_parser (parser);
-    for (int i = 0; i < STRING_MAX_SIZE; ++i)
+    for (int i = 0; i < file_size + 1; ++i)
         {
             buffer[i] = '\0';
         }

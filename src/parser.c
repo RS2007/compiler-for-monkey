@@ -17,7 +17,7 @@ char *
 print_program_string (void *program_node_cast_to_void)
 {
     program_t *program_node = ((program_t *)program_node_cast_to_void);
-    char *program_node_string = (char *)malloc (32768 * sizeof (char));
+    char *program_node_string = (char *)calloc (32768, sizeof (char));
     program_node_string[0] = '\0';
     for (int i = 0; i < program_node->statements_length; ++i)
         {
@@ -237,7 +237,7 @@ push_errors_parser (parser_t *parser, char *error_msg)
 parser_t *
 new_parser (lexer_t *lexer)
 {
-    parser_t *parser = (parser_t *)malloc (sizeof (parser_t));
+    parser_t *parser = (parser_t *)calloc (1, sizeof (parser_t));
     parser->lexer = lexer;
     parser->errors
         = (char **)calloc (DEFAULT_DYNAMIC_ARR_SIZE, MAX_ERROR_SIZE);
@@ -322,7 +322,7 @@ statement_node_let (void *let_statement_cast_to_void)
 program_t *
 new_program_node ()
 {
-    program_t *program_node = (program_t *)malloc (sizeof (program_t));
+    program_t *program_node = (program_t *)calloc (1, sizeof (program_t));
     if (program_node == NULL)
         {
             fprintf (stderr, "Fatal: Cannot allocate memory of %zu bytes",
@@ -454,7 +454,7 @@ expression_t *
 parse_hash_literal (parser_t *parser)
 {
     hash_literal_t *hash_literal
-        = (hash_literal_t *)malloc (sizeof (hash_literal_t));
+        = (hash_literal_t *)calloc (1, sizeof (hash_literal_t));
     generic_hash_table_t *hash_table = create_hash_table (
         HASH_KEY_POINTER_TYPE, HASH_VALUE_TYPE_EXPRESSION);
     hash_literal->expression.type = HASH_LITERAL;
@@ -517,7 +517,7 @@ expression_t *
 parse_index_expression (parser_t *parser, expression_t *left)
 {
     index_expression_t *expr
-        = (index_expression_t *)malloc (sizeof (index_expression_t));
+        = (index_expression_t *)calloc (1, sizeof (index_expression_t));
     expr->token = parser->curr_token;
     expr->left = left;
     expr->expression.type = INDEX_EXPRESSION;
@@ -566,7 +566,7 @@ expression_t *
 parse_array_literal (parser_t *parser)
 {
     array_literal_t *array
-        = (array_literal_t *)malloc (sizeof (array_literal_t));
+        = (array_literal_t *)calloc (1, sizeof (array_literal_t));
     array->expression.type = ARRAY_LITERAL;
     array->expression.node.string = print_array_literal;
     array->token = parser->curr_token;
@@ -591,7 +591,7 @@ statement_t *
 parse_let_statement (parser_t *parser)
 {
     let_statement_t *stmt
-        = (let_statement_t *)malloc (sizeof (let_statement_t));
+        = (let_statement_t *)calloc (1, sizeof (let_statement_t));
     // 1. token info
     stmt->statement.type = LET_STATEMENT;
     stmt->token = parser->curr_token;
@@ -606,7 +606,7 @@ parse_let_statement (parser_t *parser)
             return NULL;
         }
     // 2. identifier info
-    stmt->name = malloc (sizeof (identifier_t));
+    stmt->name = calloc (1, sizeof (identifier_t));
     stmt->name->value = parser->curr_token->literal;
     if (!expect_peek_token (parser, ASSIGN))
         {
@@ -634,7 +634,7 @@ statement_t *
 parse_return_statement (parser_t *parser)
 {
     ret_statement_t *stmt
-        = (ret_statement_t *)malloc (sizeof (ret_statement_t));
+        = (ret_statement_t *)calloc (1, sizeof (ret_statement_t));
     stmt->token = parser->curr_token;
     stmt->statement.node.token_literal = ret_token_literal;
     stmt->statement.node.string = print_return_string;
@@ -681,7 +681,7 @@ expression_t *
 parse_identifier (parser_t *parser)
 {
     identifier_t *identifier
-        = (identifier_t *)malloc (sizeof (expression_statement_t));
+        = (identifier_t *)calloc (1, sizeof (expression_statement_t));
     identifier->expression.type = IDENTIFIER;
     identifier->value = strdup (parser->curr_token->literal);
     identifier->expression.node.string = identifier_string;
@@ -710,8 +710,8 @@ string_literal_string (void *string_expression_cast_to_void)
 statement_t *
 parse_expression_statement (parser_t *parser)
 {
-    expression_statement_t *stmt
-        = (expression_statement_t *)malloc (sizeof (expression_statement_t));
+    expression_statement_t *stmt = (expression_statement_t *)calloc (
+        1, sizeof (expression_statement_t));
     // stmt->token = parser->curr_token->type;
     stmt->statement.type = EXPRESSION_STATEMENT;
     stmt->expression = parse_expression (parser, LOWEST);
@@ -731,7 +731,7 @@ parse_expression_statement (parser_t *parser)
 char *
 get_if_expression_string (void *if_expression_cast_to_void)
 {
-    if_expression_t *if_expression = malloc (sizeof (if_expression_t));
+    if_expression_t *if_expression = calloc (1, sizeof (if_expression_t));
     char *if_expression_string = (char *)malloc (STRING_MAX_SIZE);
     if_expression_string[0] = '\0';
     int i;
@@ -779,7 +779,7 @@ expression_t *
 parse_boolean_expression (parser_t *parser)
 {
     boolean_expression_t *expression
-        = (boolean_expression_t *)malloc (sizeof (boolean_expression_t));
+        = (boolean_expression_t *)calloc (1, sizeof (boolean_expression_t));
     // expression->token->type = parser->curr_token->type;
     bool is_true = strcmp (parser->curr_token->literal, "true") == 0;
     bool is_false = strcmp (parser->curr_token->literal, "false") == 0;
@@ -797,7 +797,7 @@ parse_boolean_expression (parser_t *parser)
 expression_t *
 parse_integer_literal (parser_t *parser)
 {
-    integer_t *integer_expression = malloc (sizeof (integer_t));
+    integer_t *integer_expression = calloc (1, sizeof (integer_t));
     integer_expression->expression.type = INTEGER_LITERAL;
     integer_expression->value = atoi (parser->curr_token->literal);
     integer_expression->expression.node.string = integer_literal_string;
@@ -807,7 +807,8 @@ parse_integer_literal (parser_t *parser)
 expression_t *
 parse_string_literal (parser_t *parser)
 {
-    string_literal_t *string_expression = malloc (sizeof (string_literal_t));
+    string_literal_t *string_expression
+        = calloc (1, sizeof (string_literal_t));
     string_expression->expression.type = STRING_LITERAL;
     string_expression->value = parser->curr_token->literal;
     string_expression->expression.node.string = string_literal_string;
@@ -832,7 +833,8 @@ statement_t *
 parse_block_statement (parser_t *parser)
 {
     // setup the block_statement
-    block_statement_t *block_statement = malloc (sizeof (block_statement_t));
+    block_statement_t *block_statement
+        = calloc (1, sizeof (block_statement_t));
     block_statement->statement.type = BLOCK_STATEMENT;
     block_statement->statement.node.string = print_block_statement;
     block_statement->statements_length = 0;
@@ -859,7 +861,7 @@ parse_block_statement (parser_t *parser)
 expression_t *
 parse_if_expression (parser_t *parser)
 {
-    if_expression_t *if_expression = malloc (sizeof (if_expression_t));
+    if_expression_t *if_expression = calloc (1, sizeof (if_expression_t));
     if_expression->expression.type = IF_EXPRESSION;
     if (!is_peek_token (parser, LPAREN))
         {
@@ -967,7 +969,7 @@ expression_t *
 parse_function_expression (parser_t *parser)
 {
     function_literal_t *function_expression
-        = malloc (sizeof (function_literal_t));
+        = calloc (1, sizeof (function_literal_t));
     function_expression->expression.type = FUNCTION_EXPRESSION;
     if (!is_peek_token (parser, LPAREN))
         {
@@ -1002,7 +1004,7 @@ expression_t *
 parse_prefix_expression (parser_t *parser)
 {
     prefix_expression_t *expression
-        = (prefix_expression_t *)malloc (sizeof (expression_statement_t));
+        = (prefix_expression_t *)calloc (1, sizeof (prefix_expression_t));
     expression->expression.type = PREFIX_EXPRESSION;
     expression->op = parser->curr_token->literal;
     next_token_parser (parser);
@@ -1072,7 +1074,7 @@ expression_t *
 parse_call_expression (parser_t *parser, expression_t *left)
 {
     call_expression_t *expression
-        = (call_expression_t *)malloc (sizeof (call_expression_t));
+        = (call_expression_t *)calloc (1, sizeof (call_expression_t));
     expression->function = left;
     expression->expression.type = CALL_EXPRESSION;
     expression->expression.node.string = get_call_expression_string;
@@ -1090,7 +1092,7 @@ expression_t *
 parse_infix_function (parser_t *parser, expression_t *left)
 {
     infix_expression_t *infix_expression
-        = (infix_expression_t *)malloc (sizeof (infix_expression_t));
+        = (infix_expression_t *)calloc (1, sizeof (infix_expression_t));
     if (infix_expression == NULL)
         {
             fprintf (stderr, "Failed to allocated %zu bytes",

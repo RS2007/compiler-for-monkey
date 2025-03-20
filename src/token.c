@@ -8,7 +8,7 @@
 token_t *
 new_token ()
 {
-    token_t *token = (token_t *)malloc (sizeof (token_t *));
+    token_t *token = (token_t *)malloc (sizeof (token_t));
     if (token == NULL)
         {
             fprintf (stderr, "Fatal: failed to allocate %zu bytes.\n",

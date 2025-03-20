@@ -4,7 +4,7 @@
 environment_t *
 new_environment ()
 {
-    environment_t *env = (environment_t *)malloc (sizeof (environment_t));
+    environment_t *env = (environment_t *)calloc (1, sizeof (environment_t));
     env->store
         = create_hash_table (HASH_KEY_STRING_TYPE, HASH_VALUE_TYPE_OBJECT);
     env->outer = NULL;

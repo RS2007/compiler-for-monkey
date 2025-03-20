@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 bool
@@ -50,7 +51,7 @@ generic_linked_list_t *
 create_linked_list (linked_list_type type)
 {
     generic_linked_list_t *ll
-        = (generic_linked_list_t *)malloc (sizeof (generic_linked_list_t));
+        = (generic_linked_list_t *)calloc (1, sizeof (generic_linked_list_t));
     ll->type = type;
     return ll;
 }
@@ -59,7 +60,7 @@ generic_hash_table_t *
 create_hash_table (hash_key_type key_type, hash_value_type value_type)
 {
     generic_hash_table_t *hash_table
-        = (generic_hash_table_t *)malloc (sizeof (generic_hash_table_t));
+        = (generic_hash_table_t *)calloc (1, sizeof (generic_hash_table_t));
     hash_table->key_type = key_type;
     hash_table->value_type = value_type;
     hash_table->occupied_size = 0;
@@ -67,8 +68,8 @@ create_hash_table (hash_key_type key_type, hash_value_type value_type)
         HASH_TABLE_SIZE, sizeof (generic_linked_list_t));
     for (int i = 0; i < HASH_TABLE_SIZE; ++i)
         {
-            hash_table->items[i] = (generic_linked_list_t *)malloc (
-                sizeof (generic_linked_list_t));
+            hash_table->items[i] = (generic_linked_list_t *)calloc (
+                1, sizeof (generic_linked_list_t));
             hash_table->items[i]->type = LL_KEY_VALUE_TYPE;
         }
     return hash_table;
@@ -85,8 +86,8 @@ push_linked_list (generic_linked_list_t *ll, void *value)
 {
 
     generic_linked_list_node_t *ll_node
-        = (generic_linked_list_node_t *)malloc (
-            sizeof (generic_linked_list_node_t));
+        = (generic_linked_list_node_t *)calloc (
+            1, sizeof (generic_linked_list_node_t));
     generic_linked_list_node_t *curr_tail = ll->tail;
     ll_node->type = ll->type;
     ll_node->data = value;
@@ -132,7 +133,7 @@ insert_hash_table (generic_hash_table_t *hash_table, void *key, void *value)
     uint64_t key_hash = generic_hash (hash_table->key_type, key);
     generic_linked_list_t *ll = hash_table->items[key_hash];
     generic_key_value_t *key_value
-        = (generic_key_value_t *)malloc (sizeof (generic_key_value_t));
+        = (generic_key_value_t *)calloc (1, sizeof (generic_key_value_t));
     key_value->key_type = hash_table->key_type;
     key_value->value_type = hash_table->value_type;
     key_value->key = key;
