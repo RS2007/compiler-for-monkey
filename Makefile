@@ -1,8 +1,9 @@
-CC = clang
+CC = clang 
 DEBUGGER = gdb
 #C_FLAGS = -Wall -g -ggdb3 -pedantic
 C_FLAGS = -Wall -g -ggdb3 -pedantic -fsanitize=address
-SRC_FOLDER = ./src TEST_FOLDER = ./tests
+SRC_FOLDER = ./src
+TEST_FOLDER = ./tests
 BIN_FOLDER = ./bin
 SOURCES = $(wildcard $(SRC_FOLDER)/*.c)
 HEADERS = $(wildcard $(SRC_FOLDER)/*.h)
